@@ -13,8 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 
-# SERVICE_DOMAIN 하나로 호스트/CSRF 를 함께 처리한다 (예: myapp.example.com)
-SERVICE_DOMAIN = os.environ.get("SERVICE_DOMAIN", "localhost")
+# SERVICE_DOMAIN 하나로 호스트/CSRF 를 함께 처리한다 (예: myapp.example.com).
+# Coolify 는 SERVICE_ 접두사를 예약하므로 직접 설정이 안 될 수 있다 —
+# 그 경우 Coolify 가 자동 주입하는 SERVICE_FQDN_APP 을 폴백으로 사용한다.
+SERVICE_DOMAIN = (
+    os.environ.get("SERVICE_DOMAIN")
+    or os.environ.get("SERVICE_FQDN_APP")
+    or "localhost"
+)
 ALLOWED_HOSTS = [SERVICE_DOMAIN, "localhost", "127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = [f"https://{SERVICE_DOMAIN}"]
 
