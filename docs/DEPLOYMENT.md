@@ -74,11 +74,21 @@ Coolify → Sources → **+ Add GitHub App** → 조직/계정에 설치.
 ## 새 서비스 배포 (매번, ~10분)
 
 1. **리포 생성**: 템플릿 리포에서 *Use this template* → 서비스 이름으로 생성
-2. **Coolify 등록**: + New Resource → GitHub App → 리포 선택 → Build Pack: *Docker Compose*
-3. **도메인**: Coolify UI 에서 `myservice.example.com` 입력 (와일드카드 터널이 이미 받으므로 DNS 작업 없음)
-4. **환경변수**: `.env.example` 의 항목을 Coolify Environment Variables 에 입력
-   - `SECRET_KEY` 새로 생성, `LITESTREAM_PATH` 는 서비스 이름
-5. **Deploy** 클릭 → 이후 `git push` 마다 자동 배포, PR 열면 프리뷰 배포(옵션)
+2. **Coolify 등록**: + New Resource → GitHub App → 리포 선택 → Build Pack: **Docker Compose**
+   - **Docker Compose Location 을 `/docker-compose.yml` 로 수정** (기본값이 `.yaml` 이라 못 찾음)
+3. **도메인**: 서비스 목록에서 **app 서비스의 Domains** 필드에 입력:
+   `http://myservice.example.com:8000`
+   - **반드시 `http://`** — Cloudflare Tunnel 이 TLS 를 처리하므로 `https://` 로 넣으면
+     Traefik 의 https 리다이렉트와 무한루프가 생긴다
+   - `:8000` 은 컨테이너 내부 포트 지정
+4. **Advanced 탭 → "Connect To Predefined Network" ON** — 이게 꺼져 있으면
+   앱이 Traefik(coolify 네트워크)에 연결되지 않아 404 가 난다
+5. **환경변수** (Environment Variables 탭):
+   - `SECRET_KEY` 새로 생성 (필수)
+   - Litestream 변수들 (`LITESTREAM_BUCKET/PATH/ENDPOINT/키`) — 프로덕션 필수
+   - 도메인은 자동: Coolify 가 주입하는 `SERVICE_FQDN_APP` 을 앱이 읽는다
+     (`SERVICE_` 접두사는 Coolify 예약이라 직접 정의해도 무시됨)
+6. **Deploy** 클릭 → 이후 `git push` 마다 자동 배포 (웹훅 설정 시)
 
 체크: `https://myservice.example.com/healthz` 가 `{"status": "ok"}` 반환하면 완료.
 
