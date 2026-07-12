@@ -18,7 +18,8 @@ WORKDIR /build
 COPY static/ static/
 COPY app/templates/ app/templates/
 
-RUN tailwindcss -i static/css/input.css -o static/css/output.css --minify \
+RUN mkdir -p static/js \
+    && tailwindcss -i static/css/input.css -o static/css/output.css --minify \
     && curl -fsSL -o static/js/alpine.min.js \
        "https://cdn.jsdelivr.net/npm/alpinejs@${ALPINEJS_VERSION}/dist/cdn.min.js"
 
