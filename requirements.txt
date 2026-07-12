@@ -2,7 +2,9 @@ django>=5.1,<6.0
 djust
 channels>=4.0
 channels-redis>=4.2
-redis>=5.0
+# redis 8.x 는 channels_redis 4.3 과 비호환 (블로킹 수신이 ~6초마다
+# TimeoutError 로 죽어 WebSocket 재연결 루프 발생) — 5.x 에 고정
+redis>=5.0,<6
 uvicorn[standard]>=0.30
 whitenoise>=6.7
 django-axes>=7.0
