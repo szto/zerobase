@@ -16,10 +16,11 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x64") \
 
 WORKDIR /build
 COPY static/ static/
+COPY assets/ assets/
 COPY app/templates/ app/templates/
 
-RUN mkdir -p static/js \
-    && tailwindcss -i static/css/input.css -o static/css/output.css --minify \
+RUN mkdir -p static/css static/js \
+    && tailwindcss -i assets/css/input.css -o static/css/output.css --minify \
     && curl -fsSL -o static/js/alpine.min.js \
        "https://cdn.jsdelivr.net/npm/alpinejs@${ALPINEJS_VERSION}/dist/cdn.min.js"
 
