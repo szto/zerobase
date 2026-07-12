@@ -8,7 +8,12 @@ services:
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379/0
-      # Coolify Shared Variables (팀 공유) — 서비스별 입력 불필요
+      # 표준 프록시 체인 (Cloudflare 엣지 → cloudflared → Traefik) 홉 수.
+      # Traefik 에 forwardedHeaders.trustedIPs 가 설정돼 있어야 유효하다
+      # (docs/DEPLOYMENT.md 참고). 체인이 다르면 서비스 env 로 덮어쓴다.
+      DJUST_TRUSTED_PROXY_COUNT: "2"
+      # Coolify Shared Variables (팀 공유) 참조 — 서비스별 입력 불필요.
+      # DIY(비 Coolify) 배포에서는 이 4줄을 지우고 .env 로 주입한다.
       LITESTREAM_BUCKET: "{{team.LITESTREAM_BUCKET}}"
       LITESTREAM_ENDPOINT: "{{team.LITESTREAM_ENDPOINT}}"
       LITESTREAM_ACCESS_KEY_ID: "{{team.LITESTREAM_ACCESS_KEY_ID}}"

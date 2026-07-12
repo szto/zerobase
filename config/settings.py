@@ -120,12 +120,20 @@ else:
 
 # djust 는 REDIS_URL 환경변수를 직접 읽어 상태 백엔드를 구성한다.
 # 프록시(Cloudflare/Traefik) 뒤에서 클라이언트 IP 를 신뢰하기 위한 설정.
-# NOTE: 키 이름은 사용하는 djust 버전의 문서와 대조할 것.
 DJUST_TRUSTED_PROXIES = [
     p.strip()
     for p in os.environ.get("DJUST_TRUSTED_PROXIES", "").split(",")
     if p.strip()
 ]
+
+# WebSocket 의 IP 별 연결 제한이 진짜 클라이언트 IP 를 보도록,
+# X-Forwarded-For 에서 오른쪽부터 벗겨낼 신뢰 프록시 홉 수.
+# 표준 체인: Cloudflare 엣지 → cloudflared → Traefik = 2
+# (0 이면 소켓 피어(프록시 IP)를 그대로 사용 — 프록시 뒤에서는 전 사용자가
+#  같은 IP 로 보여 rate limit 이 오작동한다)
+DJUST_TRUSTED_PROXY_COUNT = int(
+    os.environ.get("DJUST_TRUSTED_PROXY_COUNT", "0") or 0
+)
 
 # ── 정적 파일 (WhiteNoise) ──────────────────────────────────────
 STATIC_URL = "/static/"

@@ -47,6 +47,22 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 설치 후 `http://<lxc-ip>:8000` 접속 → 관리자 계정 생성.
 Coolify 설정에서 프록시를 확인한다 (기본 Traefik — 그대로 사용).
 
+**Traefik forwarded 헤더 신뢰 설정 (필수)** — `/data/coolify/proxy/docker-compose.yml`
+의 command 에 두 줄 추가 후 프록시 재시작:
+
+```yaml
+- '--entrypoints.http.forwardedHeaders.trustedIPs=192.168.35.0/24'
+- '--entrypoints.https.forwardedHeaders.trustedIPs=192.168.35.0/24'
+```
+
+이게 없으면 Traefik 이 Cloudflare 가 넣은 X-Forwarded-For 를 버리고 자기 피어 IP 로
+교체한다 → 모든 사용자가 같은 IP 로 보여 djust 의 IP 별 WebSocket rate limit 이
+전 사용자를 차단한다 (증상: 클라이언트 무한 "reconnecting", 서버 로그
+"Connection rejected for IP ... (limit or cooldown)").
+
+참고: 같은 LXC 에서 tailscale serve 가 443 을 쓰면 프록시의 443 바인딩을
+`'192.168.35.104:443:443'` 처럼 LAN IP 로 한정해 충돌을 피한다.
+
 ### 3. Cloudflare Tunnel
 
 1. Cloudflare Zero Trust → Networks → Tunnels → **Create tunnel** (cloudflared, Docker 실행 방식 선택)
@@ -61,13 +77,41 @@ Coolify 설정에서 프록시를 확인한다 (기본 Traefik — 그대로 사
 ### 4. GitHub 연동
 
 Coolify → Sources → **+ Add GitHub App** → 조직/계정에 설치.
-이후 리포 목록에서 바로 선택해 배포할 수 있고, push 웹훅도 자동 구성된다.
+이후 리포 목록에서 바로 선택해 배포할 수 있다.
 
-### 5. Cloudflare R2 (백업 버킷)
+**push 자동 배포(웹훅)가 되려면 추가로:**
+
+1. **Coolify 전용 터널 호스트네임** — `coolify.<도메인>` → `HTTP://<coolify-lxc-ip>:8000` (Coolify 직결).
+   와일드카드(→Traefik:80)에 맡기면 안 된다: Traefik 의 https 리다이렉트에 걸리는데,
+   GitHub 은 웹훅에서 리다이렉트를 따라가지 않아 모든 전송이 조용히 실패한다.
+   **터널 호스트네임 목록에서 이 항목이 와일드카드보다 위에 있어야 한다**
+   (순서 변경이 안 되면 와일드카드를 지웠다 다시 추가).
+2. Coolify → Settings → **Instance's Domain** = `https://coolify.<도메인>`
+3. **GitHub App 의 Webhook URL 확인** — App 은 생성 시점의 인스턴스 주소로 등록되므로,
+   나중에 도메인을 바꿨다면 github.com/settings/apps/<앱이름> 에서 직접 갱신해야 한다:
+   `https://coolify.<도메인>/webhooks/source/github/events`
+   (Advanced 탭 → Recent Deliveries 에서 전송 성공/실패를 확인할 수 있다)
+
+검증: `curl -X POST https://coolify.<도메인>/webhooks/source/github/events` 가
+30x 리다이렉트 없이 200/4xx 로 응답해야 하고, 리포에 push 하면 1분 내
+Coolify 에 새 Deployment 가 생겨야 한다.
+
+**Coolify 공개 노출 보호 (Cloudflare Access, 권장):**
+Zero Trust → Access controls → Applications 에서 self-hosted 앱 2개 생성:
+1. `coolify.<도메인>` + **Path `webhooks`** → 정책 Action **Bypass**, Include Everyone
+   (GitHub 웹훅은 로그인 불가 — 경로가 더 구체적인 앱이 우선 매칭된다)
+2. `coolify.<도메인>` (Path 없음) → 정책 Action **Allow**, Include Emails = 관리자 이메일
+평소 관리는 tailnet 주소로 하고, 공개 주소는 웹훅 수신 전용으로 둔다.
+
+### 5. Cloudflare R2 (백업 버킷) + Coolify 공유 변수
 
 1. R2 → 버킷 생성 (예: `service-backups` 하나를 전 서비스가 공유, 서비스별 경로 분리)
-2. R2 API 토큰 생성 (Object Read & Write) → `LITESTREAM_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY`
+2. R2 API 토큰 생성 (Object Read & Write) → Access Key ID / Secret
 3. 엔드포인트: `https://<account-id>.r2.cloudflarestorage.com`
+4. **Coolify → Shared Variables → Team** 에 한 번만 등록:
+   `LITESTREAM_BUCKET`, `LITESTREAM_ENDPOINT`,
+   `LITESTREAM_ACCESS_KEY_ID`, `LITESTREAM_SECRET_ACCESS_KEY`
+   — compose 파일이 `{{team.*}}` 로 참조하므로 서비스마다 다시 입력할 필요 없다
 
 ---
 
@@ -83,10 +127,11 @@ Coolify → Sources → **+ Add GitHub App** → 조직/계정에 설치.
    - `:8000` 은 컨테이너 내부 포트 지정
 4. **Advanced 탭 → "Connect To Predefined Network" ON** — 이게 꺼져 있으면
    앱이 Traefik(coolify 네트워크)에 연결되지 않아 404 가 난다
-5. **환경변수** (Environment Variables 탭):
+5. **환경변수** (Environment Variables 탭) — 서비스별 입력은 **딱 2개**:
    - `SECRET_KEY` 새로 생성 (필수)
-   - Litestream 변수들 (`LITESTREAM_BUCKET/PATH/ENDPOINT/키`) — 프로덕션 필수
-   - 도메인은 자동: Coolify 가 주입하는 `SERVICE_FQDN_APP` 을 앱이 읽는다
+   - `LITESTREAM_PATH` = 서비스 이름 (버킷 내 백업 경로)
+   - 나머지는 자동: R2 접속 정보는 compose 가 팀 공유 변수(`{{team.*}}`)를 참조하고,
+     도메인은 Coolify 가 주입하는 `SERVICE_FQDN_APP` 을 앱이 읽는다
      (`SERVICE_` 접두사는 Coolify 예약이라 직접 정의해도 무시됨)
 6. **Deploy** 클릭 → 이후 `git push` 마다 자동 배포 (웹훅 설정 시)
 
