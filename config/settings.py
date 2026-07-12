@@ -28,6 +28,14 @@ CSRF_TRUSTED_ORIGINS = [f"https://{SERVICE_DOMAIN}"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # HSTS 헤더는 브라우저가 TLS 연결에서만 존중하므로 LAN http 접근에 무해
+    SECURE_HSTS_SECONDS = 2592000  # 30일
+    # SECURE_SSL_REDIRECT 는 의도적으로 끈다 — TLS 를 Cloudflare 가 종료하므로
+    # 앱 레벨 https 리다이렉트는 프록시 체인에서 무한루프를 만든다 (W008 무시)
+
 # ── 앱 ───────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     "django.contrib.admin",
