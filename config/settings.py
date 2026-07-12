@@ -134,6 +134,10 @@ DJUST_CONFIG = {
     "SESSION_TTL": 3600,
 }
 
+# ?zdebug 쿼리로 디버그 패널 허용 여부 (config/zdebug.py).
+# 뷰 내부 상태가 노출되므로 외부 공개 서비스에서는 false 로 설정한다.
+ZDEBUG_ENABLED = os.environ.get("ZDEBUG_ENABLED", "true").lower() == "true"
+
 # 프록시(Cloudflare/Traefik) 뒤에서 클라이언트 IP 를 신뢰하기 위한 설정.
 DJUST_TRUSTED_PROXIES = [
     p.strip()

@@ -23,3 +23,16 @@ class CounterViewTests(TestCase):
         client.assert_state(count=2)
         client.send_event("decrement")
         client.assert_state(count=1)
+
+
+class ZDebugTests(TestCase):
+    """?zdebug 쿼리로 디버그 패널이 조건부 주입되는지 (DEBUG=False 기준)."""
+
+    def test_panel_injected_with_zdebug(self):
+        html = self.client.get("/?zdebug").content.decode()
+        self.assertIn("debug-panel.js", html)
+        self.assertIn("DJUST_DEBUG_INFO", html)
+
+    def test_panel_absent_without_zdebug(self):
+        html = self.client.get("/").content.decode()
+        self.assertNotIn("debug-panel.js", html)
