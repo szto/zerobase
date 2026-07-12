@@ -126,7 +126,14 @@ else:
         "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
     }
 
-# djust 는 REDIS_URL 환경변수를 직접 읽어 상태 백엔드를 구성한다.
+# djust 1.1+ 는 상태 백엔드를 명시해야 한다 — 안 하면 프로덕션에서도
+# 인메모리로 떨어져 워커 간 상태가 유실된다 (재연결 시 화면 초기화).
+DJUST_CONFIG = {
+    "STATE_BACKEND": "redis" if REDIS_URL else "memory",  # 로컬(레디스 없음)은 memory
+    "REDIS_URL": REDIS_URL or "redis://localhost:6379/0",
+    "SESSION_TTL": 3600,
+}
+
 # 프록시(Cloudflare/Traefik) 뒤에서 클라이언트 IP 를 신뢰하기 위한 설정.
 DJUST_TRUSTED_PROXIES = [
     p.strip()
