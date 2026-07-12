@@ -15,7 +15,9 @@ echo "[entrypoint] migrate..."
 python manage.py migrate --noinput
 
 # 3) 앱 기동 — 복제가 켜져 있으면 litestream 이 uvicorn 을 감독한다
-CMD="uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --workers $WORKERS --loop uvloop --ws websockets"
+# --ws auto: 설치된 최선의 websockets 구현 선택 (websockets 지정은 deprecated)
+# --lifespan off: Channels 는 lifespan 프로토콜 미지원 — 기동 시 안내 로그 제거
+CMD="uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --workers $WORKERS --loop uvloop --ws auto --lifespan off"
 
 if [ -n "$LITESTREAM_BUCKET" ]; then
     echo "[entrypoint] starting under litestream replicate..."

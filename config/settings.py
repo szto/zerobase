@@ -143,6 +143,20 @@ DJUST_TRUSTED_PROXY_COUNT = int(
     os.environ.get("DJUST_TRUSTED_PROXY_COUNT", "0") or 0
 )
 
+
+def _client_ip_from_forwarded(request):
+    """axes 브루트포스 방어가 프록시 IP 가 아닌 실제 클라이언트 IP 로 잠그도록
+    djust 와 같은 신뢰 홉 수로 X-Forwarded-For 를 해석한다."""
+    xff = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    chain = [p.strip() for p in xff.split(",") if p.strip()]
+    n = DJUST_TRUSTED_PROXY_COUNT
+    if n > 0 and len(chain) >= n:
+        return chain[-n]
+    return request.META.get("REMOTE_ADDR")
+
+
+AXES_CLIENT_IP_CALLABLE = _client_ip_from_forwarded
+
 # ── 정적 파일 (WhiteNoise) ──────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
