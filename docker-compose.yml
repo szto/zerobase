@@ -8,6 +8,11 @@ services:
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379/0
+      # Coolify Shared Variables (팀 공유) — 서비스별 입력 불필요
+      LITESTREAM_BUCKET: "{{team.LITESTREAM_BUCKET}}"
+      LITESTREAM_ENDPOINT: "{{team.LITESTREAM_ENDPOINT}}"
+      LITESTREAM_ACCESS_KEY_ID: "{{team.LITESTREAM_ACCESS_KEY_ID}}"
+      LITESTREAM_SECRET_ACCESS_KEY: "{{team.LITESTREAM_SECRET_ACCESS_KEY}}"
     volumes:
       - app-data:/data
     depends_on:
