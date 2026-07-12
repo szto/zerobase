@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -178,6 +179,17 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
     },
 }
+
+# 테스트에서는 manifest 가 없어도 {% static %} 이 동작하도록 단순 저장소 사용
+if "test" in sys.argv:
+    STORAGES["staticfiles"] = {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+    }
+
+# ── 인증 ─────────────────────────────────────────────────────────
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/studio/"
+LOGOUT_REDIRECT_URL = "/"
 
 # ── 기타 ─────────────────────────────────────────────────────────
 LANGUAGE_CODE = "ko-kr"

@@ -1,0 +1,21 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ world.name }}</title>
+    {% if world.tagline %}<meta name="description" content="{{ world.tagline }}">{% endif %}
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+</head>
+<body class="min-h-screen bg-white text-gray-900">
+    {% for b in blocks %}
+        {% with tpl="app/blocks/"|add:b.type|add:".html" %}
+            {% include tpl with cfg=b.cfg world=world sent=sent preview=False %}
+        {% endwith %}
+    {% endfor %}
+    <footer class="px-6 py-8 text-center text-xs text-gray-400">
+        {{ world.name }} · made with <a href="/" class="underline">zerobase</a>
+    </footer>
+</body>
+</html>

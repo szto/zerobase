@@ -1,0 +1,100 @@
+{% extends "app/base.html" %}
+
+{% block title %}{{ world.name }} 편집 — zerobase{% endblock %}
+
+{% block body %}
+<main dj-view="app.views.WorldEditView" dj-root class="mx-auto max-w-6xl px-4 py-6">
+    <div class="mb-4 flex items-center justify-between">
+        <a href="/studio/" class="text-sm text-gray-500 hover:underline">← 스튜디오</a>
+        <a href="/w/{{ world.slug }}/" target="_blank"
+           class="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50">
+            공개 페이지 열기 ↗ <span class="text-gray-400">/w/{{ world.slug }}/</span>
+        </a>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+        <!-- ── 왼쪽: 편집 패널 ─────────────────────────── -->
+        <div class="space-y-5">
+            <section class="rounded-xl border p-4">
+                <h2 class="mb-3 text-sm font-bold text-gray-500">사이트 설정</h2>
+                <label class="block text-xs text-gray-500">이름</label>
+                <input dj-input="update_world" data-field="name" value="{{ world.name }}"
+                       class="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+                <label class="mt-3 block text-xs text-gray-500">한 줄 소개</label>
+                <input dj-input="update_world" data-field="tagline" value="{{ world.tagline }}"
+                       class="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+                <label class="mt-3 block text-xs text-gray-500">테마 색상</label>
+                <input type="color" dj-change="update_world" data-field="theme_color"
+                       value="{{ world.theme_color }}" class="mt-1 h-9 w-16 rounded border">
+            </section>
+
+            {% for b in blocks %}
+            <section class="rounded-xl border p-4">
+                <div class="mb-3 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-gray-500">{{ b.label }}</h2>
+                    <div class="flex gap-1 text-xs">
+                        <button dj-click="move_block" data-block-id="{{ b.id }}" data-direction="up"
+                                class="rounded border px-2 py-1 hover:bg-gray-50">↑</button>
+                        <button dj-click="move_block" data-block-id="{{ b.id }}" data-direction="down"
+                                class="rounded border px-2 py-1 hover:bg-gray-50">↓</button>
+                        <button dj-click="remove_block" data-block-id="{{ b.id }}"
+                                dj-confirm="이 블록을 삭제할까요?"
+                                class="rounded border border-red-200 px-2 py-1 text-red-500 hover:bg-red-50">삭제</button>
+                    </div>
+                </div>
+                {% for f in b.fields %}
+                <label class="mt-2 block text-xs text-gray-500">{{ f.label }}</label>
+                {% if f.widget == "textarea" %}
+                <textarea dj-input="update_block" data-block-id="{{ b.id }}" data-field="{{ f.key }}"
+                          rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm font-mono">{{ f.value }}</textarea>
+                {% else %}
+                <input dj-input="update_block" data-block-id="{{ b.id }}" data-field="{{ f.key }}"
+                       value="{{ f.value }}" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+                {% endif %}
+                {% endfor %}
+            </section>
+            {% endfor %}
+
+            <section class="rounded-xl border border-dashed p-4">
+                <h2 class="mb-2 text-sm font-bold text-gray-500">블록 추가</h2>
+                <div class="flex flex-wrap gap-2">
+                    {% for t in block_types %}
+                    <button dj-click="add_block" data-block-type="{{ t.type }}"
+                            class="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50">+ {{ t.label }}</button>
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% if inquiries %}
+            <section class="rounded-xl border p-4">
+                <h2 class="mb-3 text-sm font-bold text-gray-500">최근 문의 {{ inquiries|length }}건</h2>
+                <ul class="space-y-2 text-sm">
+                    {% for q in inquiries %}
+                    <li class="rounded-lg bg-gray-50 px-3 py-2">
+                        <span class="font-medium">{{ q.name }}</span>
+                        <span class="text-xs text-gray-400">{{ q.contact }} · {{ q.created_at|date:"m/d H:i" }}</span>
+                        <p class="mt-1 text-gray-600">{{ q.message }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+
+        <!-- ── 오른쪽: 실시간 미리보기 ─────────────────── -->
+        <div class="lg:sticky lg:top-4 lg:self-start">
+            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">미리보기</p>
+            <div class="overflow-hidden rounded-xl border shadow-sm">
+                {% for b in blocks %}
+                    {% with tpl="app/blocks/"|add:b.type|add:".html" %}
+                        {% include tpl with cfg=b.cfg world=world preview=True sent=False %}
+                    {% endwith %}
+                {% endfor %}
+                <footer class="px-6 py-6 text-center text-xs text-gray-400">
+                    {{ world.name }} · made with zerobase
+                </footer>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

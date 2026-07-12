@@ -1,0 +1,27 @@
+<section id="contact" class="mx-auto max-w-2xl px-6 py-12">
+    <h2 class="text-xl font-bold" style="color: {{ world.theme_color }}">{{ cfg.heading }}</h2>
+    <p class="mt-1 text-sm text-gray-500">{{ cfg.description }}</p>
+
+    {% if sent %}
+    <p class="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+        문의가 접수되었습니다. 빠르게 연락드리겠습니다!
+    </p>
+    {% endif %}
+
+    {% if preview %}
+    <div class="mt-4 space-y-3 opacity-60">
+        <input class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="이름" aria-label="이름" disabled>
+        <input class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="연락처" aria-label="연락처" disabled>
+        <textarea class="w-full rounded-lg border px-3 py-2 text-sm" rows="3" placeholder="문의 내용" aria-label="문의 내용" disabled></textarea>
+        <button class="rounded-lg px-5 py-2 text-sm text-white" style="background: {{ world.theme_color }}" disabled>보내기 (미리보기)</button>
+    </div>
+    {% else %}
+    <form method="post" action="/w/{{ world.slug }}/inquiry/" class="mt-4 space-y-3">
+        {% csrf_token %}
+        <input name="name" required maxlength="60" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="이름" aria-label="이름">
+        <input name="contact" maxlength="120" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="연락처 (이메일/전화)" aria-label="연락처 (이메일/전화)">
+        <textarea name="message" required maxlength="2000" rows="3" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="문의 내용" aria-label="문의 내용"></textarea>
+        <button type="submit" class="rounded-lg px-5 py-2 text-sm font-medium text-white" style="background: {{ world.theme_color }}">보내기</button>
+    </form>
+    {% endif %}
+</section>

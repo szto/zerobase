@@ -1,0 +1,42 @@
+{% extends "app/base.html" %}
+
+{% block title %}스튜디오 — zerobase{% endblock %}
+
+{% block body %}
+<main dj-view="app.views.StudioView" dj-root class="mx-auto max-w-3xl px-6 py-10">
+    <h1 class="text-2xl font-bold">내 월드</h1>
+
+    <div class="mt-6 flex gap-2">
+        <input dj-input="set_name" value="{{ new_name }}" maxlength="60"
+               placeholder="새 월드 이름 (예: 로이 베이커리)"
+               class="flex-1 rounded-lg border px-4 py-2">
+        <button dj-click="create_world"
+                class="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700">
+            만들기
+        </button>
+    </div>
+    {% if error %}<p class="mt-2 text-sm text-red-600">{{ error }}</p>{% endif %}
+
+    <ul class="mt-8 space-y-3">
+        {% for w in worlds %}
+        <li class="flex items-center justify-between rounded-xl border px-5 py-4">
+            <div>
+                <span class="font-semibold">{{ w.name }}</span>
+                <span class="ml-2 text-sm text-gray-400">/w/{{ w.slug }}/</span>
+                {% if w.inquiry_count %}
+                <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">문의 {{ w.inquiry_count }}</span>
+                {% endif %}
+            </div>
+            <div class="flex gap-2 text-sm">
+                <a href="/w/{{ w.slug }}/" target="_blank" class="rounded-lg border px-3 py-1.5 hover:bg-gray-50">보기</a>
+                <a href="/studio/{{ w.id }}/" class="rounded-lg bg-gray-900 px-3 py-1.5 text-white hover:bg-gray-700">편집</a>
+            </div>
+        </li>
+        {% empty %}
+        <li class="rounded-xl border border-dashed px-5 py-10 text-center text-gray-400">
+            아직 월드가 없습니다 — 위에서 첫 월드를 만들어보세요!
+        </li>
+        {% endfor %}
+    </ul>
+</main>
+{% endblock %}
