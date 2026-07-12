@@ -1,0 +1,43 @@
+# 서비스 표준 스택: app(djust+uvicorn+litestream) + redis
+# 모든 서비스는 이 구조를 유지한다. 도메인 라우팅은 docs/DEPLOYMENT.md 참고.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - app-data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    # ── DIY(Komodo+Traefik) 모드에서만 주석 해제. Coolify 는 UI 에서 도메인 설정 ──
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.${SERVICE_NAME}.rule=Host(`${SERVICE_DOMAIN}`)
+    #   - traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=8000
+    # networks:
+    #   - proxy
+    #   - default
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  app-data:
+  redis-data:
+
+# networks:
+#   proxy:
+#     external: true

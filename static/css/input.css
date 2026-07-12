@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* 템플릿 스캔 경로 — 앱을 추가하면 여기에 @source 를 추가한다 */
+@source "../../app/templates/**/*.html";
+
+[x-cloak] {
+    display: none !important;
+}

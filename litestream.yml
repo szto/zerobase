@@ -1,0 +1,11 @@
+# SQLite → Cloudflare R2 실시간 복제 설정
+# 값은 전부 환경변수로 주입된다 (.env.example 참고)
+dbs:
+  - path: /data/db.sqlite3
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: ${LITESTREAM_PATH}
+        endpoint: ${LITESTREAM_ENDPOINT}
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
