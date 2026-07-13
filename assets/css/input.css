@@ -3,6 +3,46 @@
 /* 템플릿 스캔 경로 — 앱을 추가하면 여기에 @source 를 추가한다 */
 @source "../../app/templates/**/*.html";
 
+@theme {
+    --font-sans: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui,
+        -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
 [x-cloak] {
     display: none !important;
+}
+
+/* ── zerobase 브랜드 유틸 ─────────────────────────────── */
+.text-gradient {
+    background: linear-gradient(100deg, #4f46e5, #9333ea 55%, #db2777);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.btn-gradient {
+    background: linear-gradient(100deg, #4f46e5, #7c3aed);
+    transition: filter 0.15s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 8px 24px -8px rgb(79 70 229 / 0.5);
+}
+.btn-gradient:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px -8px rgb(79 70 229 / 0.55);
+}
+
+/* 은은한 도트 그리드 배경 (랜딩) */
+.bg-dots {
+    background-image: radial-gradient(rgb(99 102 241 / 0.14) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+}
+
+/* 카드 호버 리프트 */
+.card-lift {
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.card-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.14);
 }

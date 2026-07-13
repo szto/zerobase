@@ -1,16 +1,25 @@
-<section class="mx-auto max-w-2xl px-6 py-12">
-    <h2 class="text-xl font-bold" style="color: {{ world.theme_color }}">{{ cfg.heading }}</h2>
-    <ul class="mt-4 divide-y divide-gray-100">
-        {% for item in cfg.items %}
-        <li class="flex items-baseline justify-between gap-4 py-3">
-            <div>
-                <span class="font-medium">{{ item.name }}</span>
-                {% if item.description %}<p class="text-sm text-gray-500">{{ item.description }}</p>{% endif %}
-            </div>
-            {% if item.price %}<span class="shrink-0 text-sm font-semibold text-gray-700">{{ item.price }}</span>{% endif %}
-        </li>
-        {% empty %}
-        <li class="py-3 text-sm text-gray-400">아직 등록된 항목이 없습니다.</li>
-        {% endfor %}
-    </ul>
+<section class="px-6 py-16" style="background: color-mix(in srgb, var(--theme) 4%, white)">
+    <div class="mx-auto max-w-2xl">
+        <span class="block h-1 w-10 rounded-full" style="background: var(--theme)"></span>
+        <h2 class="mt-4 text-2xl font-extrabold tracking-tight">{{ cfg.heading }}</h2>
+        <ul class="mt-6 space-y-3">
+            {% for item in cfg.items %}
+            <li class="flex items-baseline justify-between gap-4 rounded-2xl border bg-white px-5 py-4 shadow-sm"
+                style="border-color: color-mix(in srgb, var(--theme) 12%, #f3f4f6)">
+                <div>
+                    <span class="font-bold">{{ item.name }}</span>
+                    {% if item.description %}<p class="mt-0.5 text-sm text-gray-500">{{ item.description }}</p>{% endif %}
+                </div>
+                {% if item.price %}
+                <span class="shrink-0 rounded-full px-3 py-1 text-sm font-bold"
+                      style="color: var(--theme); background: color-mix(in srgb, var(--theme) 10%, white)">{{ item.price }}</span>
+                {% endif %}
+            </li>
+            {% empty %}
+            <li class="rounded-2xl border border-dashed border-gray-200 px-5 py-6 text-center text-sm text-gray-400">
+                아직 등록된 항목이 없습니다.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 </section>

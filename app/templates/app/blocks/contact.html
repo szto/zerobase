@@ -1,27 +1,41 @@
-<section id="contact" class="mx-auto max-w-2xl px-6 py-12">
-    <h2 class="text-xl font-bold" style="color: {{ world.theme_color }}">{{ cfg.heading }}</h2>
-    <p class="mt-1 text-sm text-gray-500">{{ cfg.description }}</p>
+<section id="contact" class="mx-auto max-w-2xl px-6 py-16">
+    <span class="block h-1 w-10 rounded-full" style="background: var(--theme)"></span>
+    <h2 class="mt-4 text-2xl font-extrabold tracking-tight">{{ cfg.heading }}</h2>
+    <p class="mt-2 text-sm text-gray-500">{{ cfg.description }}</p>
 
     {% if sent %}
-    <p class="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
-        문의가 접수되었습니다. 빠르게 연락드리겠습니다!
-    </p>
+    <div class="mt-5 flex items-center gap-3 rounded-2xl bg-green-50 px-5 py-4 text-sm font-medium text-green-700">
+        <span class="text-lg">✅</span> 문의가 접수되었습니다. 빠르게 연락드리겠습니다!
+    </div>
     {% endif %}
 
-    {% if preview %}
-    <div class="mt-4 space-y-3 opacity-60">
-        <input class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="이름" aria-label="이름" disabled>
-        <input class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="연락처" aria-label="연락처" disabled>
-        <textarea class="w-full rounded-lg border px-3 py-2 text-sm" rows="3" placeholder="문의 내용" aria-label="문의 내용" disabled></textarea>
-        <button class="rounded-lg px-5 py-2 text-sm text-white" style="background: {{ world.theme_color }}" disabled>보내기 (미리보기)</button>
+    <div class="mt-6 rounded-3xl border p-6 shadow-sm"
+         style="border-color: color-mix(in srgb, var(--theme) 14%, #f3f4f6); background: color-mix(in srgb, var(--theme) 3%, white)">
+        {% if preview %}
+        <div class="space-y-3 opacity-60">
+            <input class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm" placeholder="이름" aria-label="이름" disabled>
+            <input class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm" placeholder="연락처" aria-label="연락처" disabled>
+            <textarea class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm" rows="3" placeholder="문의 내용" aria-label="문의 내용" disabled></textarea>
+            <button class="w-full rounded-xl py-3 text-sm font-bold text-white" style="background: var(--theme)" disabled>보내기 (미리보기)</button>
+        </div>
+        {% else %}
+        <form method="post" action="/w/{{ world.slug }}/inquiry/" class="space-y-3">
+            {% csrf_token %}
+            <input name="name" required maxlength="60" aria-label="이름"
+                   class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:ring-4"
+                   style="--tw-ring-color: color-mix(in srgb, var(--theme) 15%, white)" placeholder="이름">
+            <input name="contact" maxlength="120" aria-label="연락처 (이메일/전화)"
+                   class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:ring-4"
+                   style="--tw-ring-color: color-mix(in srgb, var(--theme) 15%, white)" placeholder="연락처 (이메일/전화)">
+            <textarea name="message" required maxlength="2000" rows="3" aria-label="문의 내용"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:ring-4"
+                      style="--tw-ring-color: color-mix(in srgb, var(--theme) 15%, white)" placeholder="문의 내용"></textarea>
+            <button type="submit"
+                    class="w-full rounded-xl py-3 text-sm font-bold text-white transition hover:brightness-110"
+                    style="background: var(--theme); box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--theme) 60%, transparent)">
+                보내기
+            </button>
+        </form>
+        {% endif %}
     </div>
-    {% else %}
-    <form method="post" action="/w/{{ world.slug }}/inquiry/" class="mt-4 space-y-3">
-        {% csrf_token %}
-        <input name="name" required maxlength="60" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="이름" aria-label="이름">
-        <input name="contact" maxlength="120" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="연락처 (이메일/전화)" aria-label="연락처 (이메일/전화)">
-        <textarea name="message" required maxlength="2000" rows="3" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="문의 내용" aria-label="문의 내용"></textarea>
-        <button type="submit" class="rounded-lg px-5 py-2 text-sm font-medium text-white" style="background: {{ world.theme_color }}">보내기</button>
-    </form>
-    {% endif %}
 </section>

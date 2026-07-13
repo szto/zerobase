@@ -6,23 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}zerobase{% endblock %}</title>
     {% djust_client_config %}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <script defer src="{% static 'js/alpine.min.js' %}"></script>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-900">
-    <nav class="border-b bg-white">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-            <a href="/" class="text-lg font-extrabold tracking-tight">zero<span class="text-blue-600">base</span></a>
-            <div class="flex items-center gap-4 text-sm">
+<body class="min-h-screen bg-white text-gray-900 antialiased">
+    <nav class="sticky top-0 z-40 border-b border-gray-100 bg-white/75 backdrop-blur-lg">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
+            <a href="/" class="text-xl font-extrabold tracking-tight">
+                zero<span class="text-gradient">base</span>
+            </a>
+            <div class="flex items-center gap-5 text-sm">
                 {% if user.is_authenticated %}
-                <a href="/studio/" class="font-medium text-gray-700 hover:text-blue-600">스튜디오</a>
+                <a href="/studio/" class="font-semibold text-gray-700 transition hover:text-indigo-600">스튜디오</a>
                 <form method="post" action="/logout/" class="inline">
                     {% csrf_token %}
-                    <button type="submit" class="text-gray-400 hover:text-gray-600">로그아웃</button>
+                    <button type="submit" class="text-gray-400 transition hover:text-gray-600">로그아웃</button>
                 </form>
                 {% else %}
-                <a href="/login/" class="text-gray-500 hover:text-gray-700">로그인</a>
-                <a href="/signup/" class="rounded-lg bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700">시작하기</a>
+                <a href="/login/" class="font-medium text-gray-500 transition hover:text-gray-900">로그인</a>
+                <a href="/signup/" class="btn-gradient rounded-full px-4 py-2 font-semibold text-white">시작하기</a>
                 {% endif %}
             </div>
         </div>

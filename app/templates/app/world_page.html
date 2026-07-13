@@ -6,16 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ world.name }}</title>
     {% if world.tagline %}<meta name="description" content="{{ world.tagline }}">{% endif %}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
-<body class="min-h-screen bg-white text-gray-900">
+<body class="min-h-screen bg-white text-gray-900 antialiased" style="--theme: {{ world.theme_color }}">
     {% for b in blocks %}
         {% with tpl="app/blocks/"|add:b.type|add:".html" %}
             {% include tpl with cfg=b.cfg world=world sent=sent preview=False %}
         {% endwith %}
     {% endfor %}
-    <footer class="px-6 py-8 text-center text-xs text-gray-400">
-        {{ world.name }} · made with <a href="/" class="underline">zerobase</a>
+    <footer class="border-t border-gray-100 px-6 py-10 text-center text-xs text-gray-400">
+        {{ world.name }} · made with <a href="/" class="font-semibold hover:underline" style="color: var(--theme)">zerobase</a>
     </footer>
 </body>
 </html>

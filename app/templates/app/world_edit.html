@@ -3,77 +3,98 @@
 {% block title %}{{ world.name }} 편집 — zerobase{% endblock %}
 
 {% block body %}
-<main dj-view="app.views.WorldEditView" dj-root class="mx-auto max-w-6xl px-4 py-6">
-    <div class="mb-4 flex items-center justify-between">
-        <a href="/studio/" class="text-sm text-gray-500 hover:underline">← 스튜디오</a>
+<main dj-view="app.views.WorldEditView" dj-root class="mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <a href="/studio/" class="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-50">←</a>
+            <h1 class="text-xl font-extrabold tracking-tight">{{ world.name }}</h1>
+            <span class="hidden rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-bold text-green-600 sm:inline">
+                자동 저장 중
+            </span>
+        </div>
         <a href="/w/{{ world.slug }}/" target="_blank"
-           class="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50">
-            공개 페이지 열기 ↗ <span class="text-gray-400">/w/{{ world.slug }}/</span>
+           class="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700">
+            공개 페이지 열기 ↗
         </a>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <!-- ── 왼쪽: 편집 패널 ─────────────────────────── -->
-        <div class="space-y-5">
-            <section class="rounded-xl border p-4">
-                <h2 class="mb-3 text-sm font-bold text-gray-500">사이트 설정</h2>
-                <label class="block text-xs text-gray-500">이름</label>
-                <input dj-input="update_world" data-field="name" value="{{ world.name }}"
-                       class="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
-                <label class="mt-3 block text-xs text-gray-500">한 줄 소개</label>
-                <input dj-input="update_world" data-field="tagline" value="{{ world.tagline }}"
-                       class="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
-                <label class="mt-3 block text-xs text-gray-500">테마 색상</label>
-                <input type="color" dj-change="update_world" data-field="theme_color"
-                       value="{{ world.theme_color }}" class="mt-1 h-9 w-16 rounded border">
+        <div class="space-y-4">
+            <section class="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+                <h2 class="mb-4 flex items-center gap-2 text-sm font-extrabold text-gray-800">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-sm">⚙️</span> 사이트 설정
+                </h2>
+                <label class="block text-xs font-semibold text-gray-400">이름</label>
+                <input dj-input="update_world" data-field="name" value="{{ world.name }}" aria-label="사이트 이름"
+                       class="mt-1.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                <label class="mt-4 block text-xs font-semibold text-gray-400">한 줄 소개</label>
+                <input dj-input="update_world" data-field="tagline" value="{{ world.tagline }}" aria-label="한 줄 소개"
+                       class="mt-1.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                <label class="mt-4 block text-xs font-semibold text-gray-400">브랜드 색상</label>
+                <div class="mt-1.5 flex items-center gap-3">
+                    <input type="color" dj-change="update_world" data-field="theme_color"
+                           value="{{ world.theme_color }}" aria-label="브랜드 색상"
+                           class="h-10 w-14 cursor-pointer rounded-lg border border-gray-200">
+                    <span class="font-mono text-xs text-gray-400">{{ world.theme_color }}</span>
+                </div>
             </section>
 
             {% for b in blocks %}
-            <section class="rounded-xl border p-4">
-                <div class="mb-3 flex items-center justify-between">
-                    <h2 class="text-sm font-bold text-gray-500">{{ b.label }}</h2>
-                    <div class="flex gap-1 text-xs">
-                        <button dj-click="move_block" data-block-id="{{ b.id }}" data-direction="up"
-                                class="rounded border px-2 py-1 hover:bg-gray-50">↑</button>
-                        <button dj-click="move_block" data-block-id="{{ b.id }}" data-direction="down"
-                                class="rounded border px-2 py-1 hover:bg-gray-50">↓</button>
+            <section class="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="flex items-center gap-2 text-sm font-extrabold text-gray-800">
+                        <span class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-600">{{ b.label }}</span>
+                    </h2>
+                    <div class="flex gap-1">
+                        <button dj-click="move_block" data-block-id="{{ b.id }}" data-direction="up" aria-label="위로"
+                                class="h-7 w-7 rounded-lg border border-gray-200 text-xs text-gray-500 transition hover:bg-gray-50">↑</button>
+                        <button dj-click="move_block" data-block-id="{{ b.id }}" data-direction="down" aria-label="아래로"
+                                class="h-7 w-7 rounded-lg border border-gray-200 text-xs text-gray-500 transition hover:bg-gray-50">↓</button>
                         <button dj-click="remove_block" data-block-id="{{ b.id }}"
-                                dj-confirm="이 블록을 삭제할까요?"
-                                class="rounded border border-red-200 px-2 py-1 text-red-500 hover:bg-red-50">삭제</button>
+                                dj-confirm="이 블록을 삭제할까요?" aria-label="삭제"
+                                class="h-7 w-7 rounded-lg border border-red-100 text-xs text-red-400 transition hover:bg-red-50">✕</button>
                     </div>
                 </div>
                 {% for f in b.fields %}
-                <label class="mt-2 block text-xs text-gray-500">{{ f.label }}</label>
+                <label class="mt-3 block text-xs font-semibold text-gray-400">{{ f.label }}</label>
                 {% if f.widget == "textarea" %}
-                <textarea dj-input="update_block" data-block-id="{{ b.id }}" data-field="{{ f.key }}"
-                          rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm font-mono">{{ f.value }}</textarea>
+                <textarea dj-input="update_block" data-block-id="{{ b.id }}" data-field="{{ f.key }}" aria-label="{{ f.label }}"
+                          rows="4" class="mt-1.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 font-mono text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">{{ f.value }}</textarea>
                 {% else %}
-                <input dj-input="update_block" data-block-id="{{ b.id }}" data-field="{{ f.key }}"
-                       value="{{ f.value }}" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+                <input dj-input="update_block" data-block-id="{{ b.id }}" data-field="{{ f.key }}" aria-label="{{ f.label }}"
+                       value="{{ f.value }}" class="mt-1.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
                 {% endif %}
                 {% endfor %}
             </section>
             {% endfor %}
 
-            <section class="rounded-xl border border-dashed p-4">
-                <h2 class="mb-2 text-sm font-bold text-gray-500">블록 추가</h2>
+            <section class="rounded-3xl border-2 border-dashed border-gray-200 p-5">
+                <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wide text-gray-400">블록 추가</h2>
                 <div class="flex flex-wrap gap-2">
                     {% for t in block_types %}
                     <button dj-click="add_block" data-block-type="{{ t.type }}"
-                            class="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50">+ {{ t.label }}</button>
+                            class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600">
+                        + {{ t.label }}
+                    </button>
                     {% endfor %}
                 </div>
             </section>
 
             {% if inquiries %}
-            <section class="rounded-xl border p-4">
-                <h2 class="mb-3 text-sm font-bold text-gray-500">최근 문의 {{ inquiries|length }}건</h2>
+            <section class="rounded-3xl border border-amber-100 bg-amber-50/50 p-5">
+                <h2 class="mb-3 flex items-center gap-2 text-sm font-extrabold text-amber-800">
+                    💌 최근 문의 {{ inquiries|length }}건
+                </h2>
                 <ul class="space-y-2 text-sm">
                     {% for q in inquiries %}
-                    <li class="rounded-lg bg-gray-50 px-3 py-2">
-                        <span class="font-medium">{{ q.name }}</span>
-                        <span class="text-xs text-gray-400">{{ q.contact }} · {{ q.created_at|date:"m/d H:i" }}</span>
-                        <p class="mt-1 text-gray-600">{{ q.message }}</p>
+                    <li class="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                        <div class="flex items-baseline justify-between">
+                            <span class="font-bold">{{ q.name }}</span>
+                            <span class="text-[11px] text-gray-400">{{ q.created_at|date:"m/d H:i" }}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">{{ q.contact }}</p>
+                        <p class="mt-1.5 leading-relaxed text-gray-600">{{ q.message }}</p>
                     </li>
                     {% endfor %}
                 </ul>
@@ -81,18 +102,27 @@
             {% endif %}
         </div>
 
-        <!-- ── 오른쪽: 실시간 미리보기 ─────────────────── -->
-        <div class="lg:sticky lg:top-4 lg:self-start">
-            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">미리보기</p>
-            <div class="overflow-hidden rounded-xl border shadow-sm">
-                {% for b in blocks %}
-                    {% with tpl="app/blocks/"|add:b.type|add:".html" %}
-                        {% include tpl with cfg=b.cfg world=world preview=True sent=False %}
-                    {% endwith %}
-                {% endfor %}
-                <footer class="px-6 py-6 text-center text-xs text-gray-400">
-                    {{ world.name }} · made with zerobase
-                </footer>
+        <!-- ── 오른쪽: 실시간 미리보기 (브라우저 프레임) ── -->
+        <div class="lg:sticky lg:top-20 lg:self-start">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/60">
+                <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+                    <span class="h-2.5 w-2.5 rounded-full bg-red-300"></span>
+                    <span class="h-2.5 w-2.5 rounded-full bg-amber-300"></span>
+                    <span class="h-2.5 w-2.5 rounded-full bg-green-300"></span>
+                    <span class="ml-3 flex-1 truncate rounded-md bg-white px-3 py-1 text-center font-mono text-[11px] text-gray-400 ring-1 ring-gray-100">
+                        zerobase.sztogo.com/w/{{ world.slug }}/
+                    </span>
+                </div>
+                <div class="max-h-[75vh] overflow-y-auto" style="--theme: {{ world.theme_color }}">
+                    {% for b in blocks %}
+                        {% with tpl="app/blocks/"|add:b.type|add:".html" %}
+                            {% include tpl with cfg=b.cfg world=world preview=True sent=False %}
+                        {% endwith %}
+                    {% endfor %}
+                    <footer class="px-6 py-6 text-center text-[11px] text-gray-300">
+                        {{ world.name }} · made with zerobase
+                    </footer>
+                </div>
             </div>
         </div>
     </div>
