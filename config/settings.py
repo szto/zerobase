@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── 기본 ─────────────────────────────────────────────────────────
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
+BUILD_SHA = os.environ.get("SOURCE_COMMIT", "dev")[:7]
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 
 # SERVICE_DOMAIN 하나로 호스트/CSRF 를 함께 처리한다 (예: myapp.example.com).
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",
+    "config.zdebug.build_header_middleware",
 ]
 
 AUTHENTICATION_BACKENDS = [

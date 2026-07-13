@@ -96,3 +96,15 @@ class ZDebugConsumer(LiveViewConsumer):
             response["_debug"] = debug_info
         except Exception:
             pass
+
+
+def build_header_middleware(get_response):
+    """모든 응답에 X-ZB-Build 헤더 — 사용자가 보는 빌드를 즉시 판별."""
+    from django.conf import settings as _s
+
+    def middleware(request):
+        response = get_response(request)
+        response["X-ZB-Build"] = _s.BUILD_SHA
+        return response
+
+    return middleware
