@@ -295,3 +295,232 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
             old = DemoGuestNote.objects.all()[60:]
             if old:
                 DemoGuestNote.objects.filter(id__in=[n.id for n in old]).delete()
+
+
+# ─────────────────────────────────────────────────────────────
+# 업종별 쇼케이스: 스타트업 ERP / 도소매 재고 / 무인마켓
+# 공통 패턴: dj-poll 하트비트로 전 방문자 화면 동기화
+# ─────────────────────────────────────────────────────────────
+
+from .models import ErpDeal, ErpMessage, InvEvent, InvItem, UmEvent, UmProduct
+
+
+def showcase_hub(request):
+    """업종 선택 허브 (정적 렌더)."""
+    return render(request, "app/showcase_hub.html")
+
+
+class ErpShowcaseView(ZDebugViewMixin, LiveView):
+    """Slack 스타일 영업/고객/협업 허브 데모."""
+
+    template_name = "app/showcase_erp.html"
+    login_required = False
+
+    SEED_DEALS = [
+        ("클라우드 도입 문의", "한강물산", 1200, 0),
+        ("연간 라이선스 갱신", "누리테크", 3400, 1),
+        ("PoC 진행", "빛나래AI", 800, 1),
+        ("전사 확대 제안", "그린모빌리티", 5600, 2),
+        ("1차 계약 체결", "서울로지스", 2500, 3),
+    ]
+    SEED_MSGS = [
+        ("김세일", "그린모빌리티 제안서 v2 공유했습니다 — 피드백 부탁!"),
+        ("박고객", "누리테크 CS 티켓 3건 오늘 모두 해결 ✅"),
+        ("이대표", "이번 주 파이프라인 리뷰는 금요일 10시입니다"),
+    ]
+
+    def mount(self, request, **kwargs):
+        self.msg_author = ""
+        self.msg_text = ""
+        if not ErpDeal.objects.exists():
+            for n, c, a, s in self.SEED_DEALS:
+                ErpDeal.objects.create(name=n, company=c, amount=a, stage=s)
+        if not ErpMessage.objects.exists():
+            for a, t in self.SEED_MSGS:
+                ErpMessage.objects.create(author=a, text=t)
+
+    def get_context_data(self, **kwargs):
+        deals = list(ErpDeal.objects.all())
+        stages = []
+        for i, label in enumerate(ErpDeal.STAGES):
+            col = [d for d in deals if d.stage == i]
+            stages.append({
+                "index": i, "label": label, "deals": col,
+                "total": sum(d.amount for d in col),
+                "is_last": i == len(ErpDeal.STAGES) - 1,
+            })
+        return {
+            "stages": stages,
+            "pipeline_total": sum(d.amount for d in deals if d.stage < 3),
+            "won_total": sum(d.amount for d in deals if d.stage == 3),
+            "messages": ErpMessage.objects.all()[:12],
+        }
+
+    @event_handler()
+    def refresh(self, **kwargs):
+        pass  # dj-poll — 재렌더만으로 전 방문자 동기화
+
+    @event_handler()
+    def advance_deal(self, deal_id: int = 0, **kwargs):
+        deal = ErpDeal.objects.filter(id=deal_id).first()
+        if deal and deal.stage < len(ErpDeal.STAGES) - 1:
+            deal.stage += 1
+            deal.save(update_fields=["stage", "updated_at"])
+            if deal.stage == len(ErpDeal.STAGES) - 1:
+                ErpMessage.objects.create(
+                    author="파이프라인봇",
+                    text=f"🎉 {deal.company} · {deal.name} 계약 전환! (+{deal.amount:,}만원)",
+                )
+
+    @event_handler()
+    def post_message(self, author: str = "", text: str = "", **kwargs):
+        author, text = author.strip()[:30] or "익명", text.strip()[:200]
+        if text:
+            ErpMessage.objects.create(author=author, text=text)
+            old = ErpMessage.objects.all()[60:]
+            if old:
+                ErpMessage.objects.filter(id__in=[m.id for m in old]).delete()
+
+
+class InventoryShowcaseView(ZDebugViewMixin, LiveView):
+    """도소매 실시간 재고 현황 데모."""
+
+    template_name = "app/showcase_inventory.html"
+    login_required = False
+
+    SEED_ITEMS = [
+        ("제주 감귤 5kg", "🍊", 42, 20),
+        ("스테인리스 텀블러", "🥤", 17, 25),
+        ("프리미엄 A4 용지", "📄", 88, 30),
+        ("무선 이어폰", "🎧", 9, 15),
+        ("유기농 원두 1kg", "☕️", 33, 20),
+    ]
+
+    def mount(self, request, **kwargs):
+        if not InvItem.objects.exists():
+            for i, (n, e, s, sf) in enumerate(self.SEED_ITEMS):
+                InvItem.objects.create(name=n, emoji=e, stock=s, safety=sf, order=i)
+
+    def get_context_data(self, **kwargs):
+        items = list(InvItem.objects.all())
+        max_stock = max([i.stock for i in items] + [1])
+        return {
+            "items": [
+                {"id": i.id, "name": i.name, "emoji": i.emoji, "stock": i.stock,
+                 "safety": i.safety, "low": i.stock < i.safety,
+                 "percent": round(i.stock * 100 / max_stock)}
+                for i in items
+            ],
+            "low_count": sum(1 for i in items if i.stock < i.safety),
+            "total_stock": sum(i.stock for i in items),
+            "events": InvEvent.objects.all()[:14],
+        }
+
+    @event_handler()
+    def refresh(self, **kwargs):
+        pass
+
+    @event_handler()
+    def receive(self, item_id: int = 0, **kwargs):
+        item = InvItem.objects.filter(id=item_id).first()
+        if item:
+            item.stock = F("stock") + 10
+            item.save(update_fields=["stock"])
+            InvEvent.objects.create(item_name=item.name, delta=10)
+
+    @event_handler()
+    def ship(self, item_id: int = 0, **kwargs):
+        updated = InvItem.objects.filter(id=item_id, stock__gte=5).update(stock=F("stock") - 5)
+        if updated:
+            item = InvItem.objects.get(id=item_id)
+            InvEvent.objects.create(item_name=item.name, delta=-5)
+
+
+class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
+    """무인마켓 앱 + 사장님 카카오톡 알림 데모."""
+
+    template_name = "app/showcase_unmanned.html"
+    login_required = False
+
+    SEED_PRODUCTS = [
+        ("바나나우유", "🥛", 1800, 12),
+        ("삼각김밥 참치", "🍙", 1500, 8),
+        ("아이스 아메리카노", "🧊", 2500, 15),
+        ("초코 스낵", "🍫", 1200, 10),
+        ("컵라면", "🍜", 1600, 9),
+        ("생수 500ml", "💧", 900, 20),
+    ]
+
+    def mount(self, request, **kwargs):
+        self._cart = {}  # {product_id: qty} — 연결(고객)별 장바구니
+        self._entered = False
+        if not UmProduct.objects.exists():
+            for i, (n, e, p, s) in enumerate(self.SEED_PRODUCTS):
+                UmProduct.objects.create(name=n, emoji=e, price=p, stock=s, order=i)
+
+    def get_context_data(self, **kwargs):
+        products = list(UmProduct.objects.all())
+        cart_items = []
+        total = 0
+        for p in products:
+            qty = self._cart.get(p.id, 0)
+            if qty:
+                cart_items.append({"name": p.name, "emoji": p.emoji, "qty": qty,
+                                   "sum": p.price * qty})
+                total += p.price * qty
+        return {
+            "products": [
+                {"id": p.id, "name": p.name, "emoji": p.emoji, "price": p.price,
+                 "stock": p.stock, "in_cart": self._cart.get(p.id, 0)}
+                for p in products
+            ],
+            "cart_items": cart_items,
+            "cart_total": total,
+            "entered": self._entered,
+            "events": UmEvent.objects.all()[:12],
+        }
+
+    @event_handler()
+    def refresh(self, **kwargs):
+        pass
+
+    @event_handler()
+    def enter_store(self, **kwargs):
+        if not self._entered:
+            self._entered = True
+            UmEvent.objects.create(kind="entry", text="문이 열렸습니다 · 고객 1명 입장 🚪")
+
+    @event_handler()
+    def add_to_cart(self, product_id: int = 0, **kwargs):
+        p = UmProduct.objects.filter(id=product_id, stock__gt=0).first()
+        if p and self._cart.get(p.id, 0) < p.stock:
+            self._cart[p.id] = self._cart.get(p.id, 0) + 1
+
+    @event_handler()
+    def checkout(self, **kwargs):
+        if not self._cart:
+            return
+        total, lines = 0, []
+        for pid, qty in list(self._cart.items()):
+            p = UmProduct.objects.filter(id=pid).first()
+            if not p:
+                continue
+            qty = min(qty, p.stock)
+            if qty <= 0:
+                continue
+            p.stock -= qty
+            p.save(update_fields=["stock"])
+            total += p.price * qty
+            lines.append(f"{p.name}×{qty}")
+            if p.stock <= 3:
+                UmEvent.objects.create(
+                    kind="low", text=f"⚠️ {p.name} 재고 {p.stock}개 — 채워주세요!"
+                )
+        if lines:
+            UmEvent.objects.create(
+                kind="pay", text=f"💳 결제 완료 {total:,}원 · {', '.join(lines)}"
+            )
+        self._cart = {}
+        old = UmEvent.objects.all()[40:]
+        if old:
+            UmEvent.objects.filter(id__in=[e.id for e in old]).delete()

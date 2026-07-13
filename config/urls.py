@@ -4,8 +4,12 @@ from django.http import JsonResponse
 from django.urls import path
 
 from app.views import (
+    ErpShowcaseView,
+    InventoryShowcaseView,
     LandingView,
     ShowcaseView,
+    UnmannedShowcaseView,
+    showcase_hub,
     StudioView,
     WorldEditView,
     signup,
@@ -23,7 +27,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz", healthz),
     path("", LandingView.as_view(), name="home"),
-    path("showcase/", ShowcaseView.as_view(), name="showcase"),
+    path("showcase/", showcase_hub, name="showcase"),
+    path("showcase/bakery/", ShowcaseView.as_view(), name="showcase_bakery"),
+    path("showcase/erp/", ErpShowcaseView.as_view(), name="showcase_erp"),
+    path("showcase/inventory/", InventoryShowcaseView.as_view(), name="showcase_inventory"),
+    path("showcase/unmanned/", UnmannedShowcaseView.as_view(), name="showcase_unmanned"),
     # 인증
     path("signup/", signup, name="signup"),
     path("login/", auth_views.LoginView.as_view(template_name="app/login.html"), name="login"),

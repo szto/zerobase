@@ -93,7 +93,7 @@ class ShowcaseTests(TestCase):
     """쇼케이스 라이브 기능 (투표/재고/방명록)."""
 
     def test_showcase_page_renders(self):
-        html = self.client.get("/showcase/").content.decode()
+        html = self.client.get("/showcase/bakery/").content.decode()
         self.assertIn("아뜰리에 오븐", html) if "아뜰리에 오븐" in html else self.assertIn("ATELIER OVEN", html)
         self.assertIn("hero3d", html)
 
@@ -133,3 +133,56 @@ class ShowcaseTests(TestCase):
         client.mount()
         client.send_event("add_note", name="지나가던 빵순이", message="깜빠뉴 최고!")
         self.assertEqual(DemoGuestNote.objects.count(), 1)
+
+
+class VerticalShowcaseTests(TestCase):
+    """업종별 쇼케이스 (허브/ERP/재고/무인)."""
+
+    def test_hub_lists_verticals(self):
+        html = self.client.get("/showcase/").content.decode()
+        for path in ["/showcase/bakery/", "/showcase/erp/", "/showcase/inventory/", "/showcase/unmanned/"]:
+            self.assertIn(path, html)
+
+    def test_erp_advance_deal_and_bot_message(self):
+        from app.models import ErpDeal, ErpMessage
+        from app.views import ErpShowcaseView
+
+        client = LiveViewTestClient(ErpShowcaseView)
+        client.mount()
+        deal = ErpDeal.objects.filter(stage=2).first()  # 제안 단계
+        client.send_event("advance_deal", deal_id=deal.id)
+        deal.refresh_from_db()
+        self.assertEqual(deal.stage, 3)
+        self.assertTrue(ErpMessage.objects.filter(author="파이프라인봇").exists())
+
+    def test_inventory_receive_and_ship(self):
+        from app.models import InvEvent, InvItem
+        from app.views import InventoryShowcaseView
+
+        client = LiveViewTestClient(InventoryShowcaseView)
+        client.mount()
+        item = InvItem.objects.first()
+        before = item.stock
+        client.send_event("receive", item_id=item.id)
+        client.send_event("ship", item_id=item.id)
+        item.refresh_from_db()
+        self.assertEqual(item.stock, before + 10 - 5)
+        self.assertEqual(InvEvent.objects.count(), 2)
+
+    def test_unmanned_checkout_flow(self):
+        from app.models import UmEvent, UmProduct
+        from app.views import UnmannedShowcaseView
+
+        client = LiveViewTestClient(UnmannedShowcaseView)
+        client.mount()
+        client.send_event("enter_store")
+        p = UmProduct.objects.first()
+        before = p.stock
+        client.send_event("add_to_cart", product_id=p.id)
+        client.send_event("add_to_cart", product_id=p.id)
+        client.send_event("checkout")
+        p.refresh_from_db()
+        self.assertEqual(p.stock, before - 2)
+        kinds = set(UmEvent.objects.values_list("kind", flat=True))
+        self.assertIn("entry", kinds)
+        self.assertIn("pay", kinds)

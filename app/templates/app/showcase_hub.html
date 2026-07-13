@@ -1,0 +1,47 @@
+{% extends "app/base.html" %}
+
+{% block title %}쇼케이스 — zerobase{% endblock %}
+
+{% block body %}
+<main class="mx-auto max-w-5xl px-6 py-16">
+    <p class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-500">Showcase</p>
+    <h1 class="mt-3 text-4xl font-extrabold tracking-tight">업종별로 체험해보세요</h1>
+    <p class="mt-3 max-w-xl text-gray-500">
+        전부 <span class="font-semibold text-gray-700">실시간</span>입니다 —
+        창 두 개로 열면 서로의 행동이 몇 초 안에 반영되는 걸 볼 수 있습니다.
+    </p>
+
+    <div class="mt-10 grid gap-5 sm:grid-cols-2">
+        <a href="/showcase/bakery/" class="card-lift group rounded-3xl border border-gray-100 bg-gradient-to-b from-amber-50/60 to-white p-7 shadow-sm">
+            <span class="text-4xl">🥖</span>
+            <h2 class="mt-4 text-xl font-extrabold">로컬 비즈니스 <span class="ml-1 text-sm font-medium text-gray-400">아뜰리에 오븐</span></h2>
+            <p class="mt-2 text-sm leading-relaxed text-gray-500">3D 히어로 · 실시간 관람자 · 오늘의 재고 카운트다운 · 라이브 투표/방명록</p>
+            <p class="mt-4 text-sm font-bold text-amber-600 transition group-hover:translate-x-1">체험하기 →</p>
+        </a>
+        <a href="/showcase/erp/" class="card-lift group rounded-3xl border border-gray-100 bg-gradient-to-b from-violet-50/60 to-white p-7 shadow-sm">
+            <span class="text-4xl">💼</span>
+            <h2 class="mt-4 text-xl font-extrabold">스타트업 ERP <span class="ml-1 text-sm font-medium text-gray-400">세일즈 허브</span></h2>
+            <p class="mt-2 text-sm leading-relaxed text-gray-500">Slack 스타일 협업 채널 · 영업 파이프라인 보드 — 딜이 움직이면 팀 전체가 실시간으로 봅니다</p>
+            <p class="mt-4 text-sm font-bold text-violet-600 transition group-hover:translate-x-1">체험하기 →</p>
+        </a>
+        <a href="/showcase/inventory/" class="card-lift group rounded-3xl border border-gray-100 bg-gradient-to-b from-cyan-50/60 to-white p-7 shadow-sm">
+            <span class="text-4xl">📦</span>
+            <h2 class="mt-4 text-xl font-extrabold">도소매 <span class="ml-1 text-sm font-medium text-gray-400">실시간 재고</span></h2>
+            <p class="mt-2 text-sm leading-relaxed text-gray-500">입출고가 모든 화면에 즉시 동기화 · 안전재고 경보 · 입출고 이력 타임라인</p>
+            <p class="mt-4 text-sm font-bold text-cyan-600 transition group-hover:translate-x-1">체험하기 →</p>
+        </a>
+        <a href="/showcase/unmanned/" class="card-lift group rounded-3xl border border-gray-100 bg-gradient-to-b from-yellow-50/70 to-white p-7 shadow-sm">
+            <span class="text-4xl">🏪</span>
+            <h2 class="mt-4 text-xl font-extrabold">무인매장 <span class="ml-1 text-sm font-medium text-gray-400">앱 + 카톡 알림</span></h2>
+            <p class="mt-2 text-sm leading-relaxed text-gray-500">고객 앱에서 담고 결제하면 — 사장님 카카오톡으로 입장·결제·재고 알림이 실시간 도착</p>
+            <p class="mt-4 text-sm font-bold text-yellow-600 transition group-hover:translate-x-1">체험하기 →</p>
+        </a>
+    </div>
+
+    <div class="mt-14 rounded-3xl bg-gray-900 px-8 py-10 text-center text-white">
+        <h2 class="text-2xl font-extrabold">이 모든 게 zerobase 블록이 됩니다</h2>
+        <p class="mt-2 text-sm text-gray-400">당신의 업종에 맞는 월드를 0에서 시작해보세요</p>
+        <a href="/signup/" class="btn-gradient mt-6 inline-block rounded-full px-7 py-3 font-bold text-white">무료로 시작하기</a>
+    </div>
+</main>
+{% endblock %}

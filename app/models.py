@@ -104,3 +104,77 @@ class DemoStock(models.Model):
     """오늘의 빵 남은 수량 — 모든 방문자가 같은 숫자를 실시간으로 본다."""
 
     remaining = models.PositiveIntegerField(default=24)
+
+
+# ── 업종별 쇼케이스: 스타트업 ERP ──
+
+
+class ErpDeal(models.Model):
+    STAGES = ["리드", "미팅", "제안", "계약"]
+
+    name = models.CharField(max_length=60)
+    company = models.CharField(max_length=60)
+    amount = models.PositiveIntegerField(default=0)  # 만원 단위
+    stage = models.PositiveSmallIntegerField(default=0)  # STAGES 인덱스
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["stage", "-amount"]
+
+
+class ErpMessage(models.Model):
+    channel = models.CharField(max_length=20, default="영업")
+    author = models.CharField(max_length=30)
+    text = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+# ── 업종별 쇼케이스: 도소매 실시간 재고 ──
+
+
+class InvItem(models.Model):
+    name = models.CharField(max_length=60)
+    emoji = models.CharField(max_length=8, default="📦")
+    stock = models.PositiveIntegerField(default=0)
+    safety = models.PositiveIntegerField(default=20)  # 안전재고
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+
+class InvEvent(models.Model):
+    item_name = models.CharField(max_length=60)
+    delta = models.IntegerField()  # +입고 / -출고
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+# ── 업종별 쇼케이스: 무인마켓 ──
+
+
+class UmProduct(models.Model):
+    name = models.CharField(max_length=60)
+    emoji = models.CharField(max_length=8, default="🛒")
+    price = models.PositiveIntegerField(default=0)
+    stock = models.PositiveIntegerField(default=10)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+
+class UmEvent(models.Model):
+    """사장님 카카오톡 알림 시뮬레이션 피드."""
+
+    kind = models.CharField(max_length=12)  # entry / pay / low
+    text = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
