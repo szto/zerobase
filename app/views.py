@@ -356,6 +356,12 @@ class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     template_name = "app/showcase_erp.html"
     login_required = False
 
+    def touch(self):
+        super().touch()
+        # 칸반처럼 요소가 컬럼 간 이동하는 구조는 djust 1.1rc 의 diff 경로가
+        # 어긋난다 (패치 실패 → 화면 훼손). 전체 HTML 전송으로 우회.
+        self._force_full_html = True
+
     SEED_DEALS = [
         ("클라우드 도입 문의", "한강물산", 1200, 0),
         ("연간 라이선스 갱신", "누리테크", 3400, 1),
