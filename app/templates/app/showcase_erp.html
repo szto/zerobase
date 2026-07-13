@@ -30,7 +30,8 @@
             <span class="text-xs text-violet-200/50">진행중 <b class="text-violet-100">{{ pipeline_total_fmt }}만원</b></span>
             <span class="text-xs text-violet-200/50">이번 달 계약 <b class="text-emerald-300">{{ won_total_fmt }}만원</b></span>
         </div>
-        <div id="pipeline-board" dj-update="replace" class="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pb-1 lg:grid-cols-4">
+        <div class="min-h-0 flex-1 overflow-y-auto pb-1">
+        <div id="pipeline-board" dj-update="replace" class="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {% for st in stages %}
             <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                 <div class="flex items-center justify-between px-1">
@@ -57,6 +58,7 @@
                 </div>
             </div>
             {% endfor %}
+        </div>
         </div>
         <p class="mt-2 shrink-0 text-[11px] text-violet-200/40">* "다음 단계"를 눌러보세요 — 계약에 도달하면 채널에 자동 알림이 갑니다. 다른 창에서도 카드가 함께 움직입니다.</p>
     </section>
