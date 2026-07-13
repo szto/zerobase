@@ -26,15 +26,16 @@
 
     <!-- ── 파이프라인 보드 ── -->
     <section>
-        <div class="mb-4 flex flex-wrap items-center gap-4">
+        <div class="mb-1 flex flex-wrap items-center gap-4">
             <h2 class="text-sm font-extrabold uppercase tracking-widest text-violet-300/70">Pipeline</h2>
             <span class="text-xs text-violet-200/50">진행중 <b class="text-violet-100">{{ pipeline_total|intcomma }}만원</b></span>
             <span class="text-xs text-violet-200/50">이번 달 계약 <b class="text-emerald-300">{{ won_total|intcomma }}만원</b></span>
         </div>
-        <div class="-mx-5 overflow-x-auto px-5 pb-2 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
+        <p class="mb-3 text-[11px] font-semibold text-violet-300/60 sm:hidden">👉 보드를 옆으로 넘겨보세요 (리드 → 계약)</p>
+        <div class="-mx-5 snap-x snap-mandatory overflow-x-auto px-5 pb-2 sm:mx-0 sm:snap-none sm:overflow-visible sm:px-0 sm:pb-0">
         <div class="grid w-[640px] grid-cols-4 gap-3 sm:w-auto">
             {% for st in stages %}
-            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+            <div class="snap-start rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                 <div class="flex items-center justify-between px-1">
                     <span class="text-xs font-extrabold {% if st.is_last %}text-emerald-300{% else %}text-violet-300{% endif %}">{{ st.label }}</span>
                     <span class="text-[10px] text-violet-200/40">{{ st.total|intcomma }}만</span>
