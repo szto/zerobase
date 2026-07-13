@@ -22,8 +22,8 @@
     </div>
 </header>
 
-<main dj-view="app.views.InventoryShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
-      class="mx-auto max-w-6xl px-5 py-8">{% spaceless %}
+{% spaceless %}<main dj-view="app.views.InventoryShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
+      class="mx-auto max-w-6xl px-5 py-8">
 
     <div class="grid gap-3 sm:grid-cols-3">
         <div class="rounded-2xl border border-white/8 bg-white/[0.03] px-6 py-5">
@@ -103,6 +103,6 @@
             <a href="/signup/" class="btn-gradient mt-3 inline-block rounded-full px-6 py-2.5 text-sm font-bold text-white">무료로 시작하기</a>
         </div>
     </footer>
-{% endspaceless %}</main>
+</main>{% endspaceless %}
 </body>
 </html>
