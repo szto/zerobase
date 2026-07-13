@@ -18,6 +18,17 @@ class DbRenderMixin:
     def touch(self):
         self.rev = getattr(self, "rev", 0) + 1
 
+
+def _hhmm(dt):
+    """러스트 렌더러는 |date 필터를 지원하지 않는다 — 파이썬에서 포맷."""
+    from django.utils import timezone as _tz
+    return _tz.localtime(dt).strftime("%H:%M")
+
+
+def _hms(dt):
+    from django.utils import timezone as _tz
+    return _tz.localtime(dt).strftime("%H:%M:%S")
+
 from .blocks import BLOCK_TYPES, default_config, render_context
 from .models import RESERVED_SLUGS, Block, Inquiry, World
 
@@ -158,13 +169,19 @@ class WorldEditView(DbRenderMixin, ZDebugViewMixin, LiveView):
                     "label": spec["label"],
                     "fields": [{**f, "value": cfg.get(f["key"], "")} for f in spec["fields"]],
                     "cfg": render_context(b),
+                    "tpl": f"app/blocks/{b.type}.html",
                 }
             )
         return {
             "world": world,
             "blocks": blocks,
             "block_types": [{"type": t, "label": s["label"]} for t, s in BLOCK_TYPES.items()],
-            "inquiries": world.inquiries.all()[:20],
+            "inquiries": [
+                {"name": q.name, "contact": q.contact, "message": q.message,
+                 "when": _hhmm(q.created_at)}
+                for q in world.inquiries.all()[:20]
+            ],
+            "inquiries_count": world.inquiries.count(),
         }
 
     @event_handler()
@@ -270,7 +287,10 @@ class ShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
                 for o in options
             ],
             "total_votes": sum(o.votes for o in options),
-            "notes": DemoGuestNote.objects.all()[:10],
+            "notes": [
+                {"name": n.name, "message": n.message, "hhmm": _hhmm(n.created_at)}
+                for n in DemoGuestNote.objects.all()[:10]
+            ],
             "voted": self.voted,
             "reserved": self.reserved,
             "note_name": self.note_name,
@@ -365,15 +385,25 @@ class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
         for i, label in enumerate(ErpDeal.STAGES):
             col = [d for d in deals if d.stage == i]
             stages.append({
-                "index": i, "label": label, "deals": col,
-                "total": sum(d.amount for d in col),
+                "index": i, "label": label,
+                "deals": [
+                    {"id": d.id, "name": d.name, "company": d.company,
+                     "amount_fmt": f"{d.amount:,}"}
+                    for d in col
+                ],
+                "total_fmt": f"{sum(d.amount for d in col):,}",
                 "is_last": i == len(ErpDeal.STAGES) - 1,
             })
         return {
             "stages": stages,
-            "pipeline_total": sum(d.amount for d in deals if d.stage < 3),
-            "won_total": sum(d.amount for d in deals if d.stage == 3),
-            "messages": list(ErpMessage.objects.all()[:12])[::-1],  # 오래된 것부터 (Slack 순서)
+            "pipeline_total_fmt": f"{sum(d.amount for d in deals if d.stage < 3):,}",
+            "won_total_fmt": f"{sum(d.amount for d in deals if d.stage == 3):,}",
+            # 오래된 것부터 (Slack 순서). 러스트 미지원 필터(first/date) 대신 프리컴퓨트
+            "messages": [
+                {"author": m.author, "initial": m.author[:1], "text": m.text,
+                 "hhmm": _hhmm(m.created_at)}
+                for m in list(ErpMessage.objects.all()[:12])[::-1]
+            ],
         }
 
     @event_handler()
@@ -436,7 +466,11 @@ class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
             ],
             "low_count": sum(1 for i in items if i.stock < i.safety),
             "total_stock": sum(i.stock for i in items),
-            "events": InvEvent.objects.all()[:14],
+            "events": [
+                {"item_name": e.item_name, "delta": e.delta, "hms": _hms(e.created_at)}
+                for e in InvEvent.objects.all()[:14]
+            ],
+            "events_count": InvEvent.objects.count(),
         }
 
     @event_handler()
@@ -492,18 +526,22 @@ class UnmannedShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
             qty = self.cart.get(p.id, 0)
             if qty:
                 cart_items.append({"name": p.name, "emoji": p.emoji, "qty": qty,
-                                   "sum": p.price * qty})
+                                   "sum_fmt": f"{p.price * qty:,}"})
                 total += p.price * qty
         return {
             "products": [
-                {"id": p.id, "name": p.name, "emoji": p.emoji, "price": p.price,
+                {"id": p.id, "name": p.name, "emoji": p.emoji,
+                 "price_fmt": f"{p.price:,}",
                  "stock": p.stock, "in_cart": self.cart.get(p.id, 0)}
                 for p in products
             ],
             "cart_items": cart_items,
-            "cart_total": total,
+            "cart_total_fmt": f"{total:,}",
             "entered": self.entered,
-            "events": UmEvent.objects.all()[:12],
+            "events": [
+                {"kind": e.kind, "text": e.text, "hhmm": _hhmm(e.created_at)}
+                for e in UmEvent.objects.all()[:12]
+            ],
         }
 
     @event_handler()

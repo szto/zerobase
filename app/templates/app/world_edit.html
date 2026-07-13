@@ -83,14 +83,14 @@
             {% if inquiries %}
             <section class="rounded-3xl border border-amber-100 bg-amber-50/50 p-5">
                 <h2 class="mb-3 flex items-center gap-2 text-sm font-extrabold text-amber-800">
-                    💌 최근 문의 {{ inquiries|length }}건
+                    💌 최근 문의 {{ inquiries_count }}건
                 </h2>
                 <ul class="space-y-2 text-sm">
                     {% for q in inquiries %}
                     <li class="rounded-2xl bg-white px-4 py-3 shadow-sm">
                         <div class="flex items-baseline justify-between">
                             <span class="font-bold">{{ q.name }}</span>
-                            <span class="text-[11px] text-gray-400">{{ q.created_at|date:"m/d H:i" }}</span>
+                            <span class="text-[11px] text-gray-400">{{ q.when }}</span>
                         </div>
                         <p class="text-xs text-gray-400">{{ q.contact }}</p>
                         <p class="mt-1.5 leading-relaxed text-gray-600">{{ q.message }}</p>
@@ -113,9 +113,7 @@
                 </div>
                 <div class="max-h-[75vh] overflow-y-auto" style="--theme: {{ world.theme_color }}">
                     {% for b in blocks %}
-                        {% with tpl="app/blocks/"|add:b.type|add:".html" %}
-                            {% include tpl with cfg=b.cfg world=world preview=True sent=False %}
-                        {% endwith %}
+                        {% include b.tpl with cfg=b.cfg world=world preview=True sent=False %}
                     {% endfor %}
                     <footer class="px-6 py-6 text-center text-[11px] text-gray-300">
                         {{ world.name }} · made with zerobase

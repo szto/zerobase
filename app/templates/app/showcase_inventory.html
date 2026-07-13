@@ -36,7 +36,7 @@
         </div>
         <div class="rounded-2xl border border-white/8 bg-white/[0.03] px-6 py-5">
             <p class="text-[11px] font-bold uppercase tracking-widest text-cyan-300/60">오늘 입출고</p>
-            <p class="mt-1 text-3xl font-extrabold tabular-nums">{{ events|length }}<span class="ml-1 text-sm font-medium text-cyan-200/50">건</span></p>
+            <p class="mt-1 text-3xl font-extrabold tabular-nums">{{ events_count }}<span class="ml-1 text-sm font-medium text-cyan-200/50">건</span></p>
         </div>
     </div>
 
@@ -88,7 +88,7 @@
                     </span>
                     <span class="min-w-0 flex-1 truncate text-cyan-100/85">{{ e.item_name }}</span>
                     <b class="tabular-nums {% if e.delta > 0 %}text-cyan-300{% else %}text-amber-300{% endif %}">{% if e.delta > 0 %}+{% endif %}{{ e.delta }}</b>
-                    <span class="text-[10px] text-cyan-200/35">{{ e.created_at|date:"H:i:s" }}</span>
+                    <span class="text-[10px] text-cyan-200/35">{{ e.hms }}</span>
                 </li>
                 {% empty %}
                 <li class="py-6 text-center text-xs text-cyan-200/35">아직 기록이 없습니다 — 입고/출고를 눌러보세요</li>

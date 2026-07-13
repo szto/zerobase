@@ -155,7 +155,7 @@
                 <li class="flex items-baseline gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-3.5">
                     <span class="shrink-0 text-sm font-bold text-amber-200">{{ n.name }}</span>
                     <span class="text-sm leading-relaxed text-stone-300">{{ n.message }}</span>
-                    <span class="ml-auto shrink-0 text-[10px] text-stone-600">{{ n.created_at|date:"H:i" }}</span>
+                    <span class="ml-auto shrink-0 text-[10px] text-stone-600">{{ n.hhmm }}</span>
                 </li>
                 {% empty %}
                 <li class="rounded-2xl border border-dashed border-white/10 px-5 py-8 text-center text-sm text-stone-600">
