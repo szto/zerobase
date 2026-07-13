@@ -25,7 +25,6 @@
 <body class="min-h-screen bg-[#0d0a08] text-stone-100 antialiased">
 <main>
 
-    <!-- ── 3D 히어로 (dj-root 밖 — VDOM 패치로부터 캔버스 보호) ── -->
     <section class="relative h-[92vh] overflow-hidden">
         <canvas id="hero3d" class="absolute inset-0 h-full w-full"></canvas>
         <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0d0a08]"></div>
@@ -46,10 +45,8 @@
         </div>
     </section>
 
-    <!-- ── 라이브 영역 ─────────────────────────────────── -->
     <div dj-view="app.views.ShowcaseView" dj-root dj-poll="heartbeat" dj-poll-interval="3000">
 
-        <!-- 라이브 현황 바 -->
         <section class="mx-auto -mt-10 max-w-3xl px-6">
             <div class="relative z-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-5 backdrop-blur-xl">
                 <div class="flex items-center gap-2.5 text-sm">
@@ -79,7 +76,6 @@
             </p>
         </section>
 
-        <!-- 시그니처 메뉴 -->
         <section class="reveal mx-auto max-w-4xl px-6 py-24">
             <p class="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/60">Signature</p>
             <h2 class="mt-3 text-3xl font-extrabold tracking-tight">시그니처 셋</h2>
@@ -105,7 +101,6 @@
             </div>
         </section>
 
-        <!-- 라이브 투표 -->
         <section class="reveal border-y border-white/5 bg-white/[0.02] py-24">
             <div class="mx-auto max-w-2xl px-6">
                 <p class="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/60">Live Poll</p>
@@ -139,7 +134,6 @@
             </div>
         </section>
 
-        <!-- 라이브 방명록 -->
         <section class="reveal mx-auto max-w-2xl px-6 py-24">
             <p class="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/60">Guest Book</p>
             <h2 class="mt-3 text-3xl font-extrabold tracking-tight">오븐 앞 방명록</h2>
@@ -171,9 +165,7 @@
             </ul>
         </section>
 
-    </div><!-- /dj-root -->
-
-    <!-- ── CTA (정적) ──────────────────────────────────── -->
+    </div>
     <section class="border-t border-white/5 bg-gradient-to-b from-transparent to-indigo-950/40 py-24 text-center">
         <div class="mx-auto max-w-xl px-6">
             <p class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-300/70">Made with zerobase</p>
@@ -194,7 +186,6 @@
     </footer>
 </main>
 
-<!-- ── Three.js 히어로: 황금 밀가루 입자 필드 ─────────── -->
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
