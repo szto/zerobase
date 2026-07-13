@@ -5,6 +5,7 @@ from django.urls import path
 
 from app.views import (
     LandingView,
+    ShowcaseView,
     StudioView,
     WorldEditView,
     signup,
@@ -22,6 +23,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz", healthz),
     path("", LandingView.as_view(), name="home"),
+    path("showcase/", ShowcaseView.as_view(), name="showcase"),
     # 인증
     path("signup/", signup, name="signup"),
     path("login/", auth_views.LoginView.as_view(template_name="app/login.html"), name="login"),

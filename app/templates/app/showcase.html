@@ -1,0 +1,274 @@
+{% load static live_tags %}
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>아뜰리에 오븐 — zerobase 쇼케이스</title>
+    <meta name="description" content="방문자들이 서로를 실시간으로 느끼는 사이트 — zerobase 플래그십 데모">
+    {% djust_client_config %}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <style>
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal.in { opacity: 1; transform: none; }
+        .gold-text {
+            background: linear-gradient(100deg, #fbbf24, #f59e0b 45%, #fde68a);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .live-dot { animation: livepulse 1.6s ease-in-out infinite; }
+        @keyframes livepulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+        .bar-fill { transition: width .8s cubic-bezier(.2,.8,.2,1); }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0d0a08] text-stone-100 antialiased">
+<main>
+
+    <!-- ── 3D 히어로 (dj-root 밖 — VDOM 패치로부터 캔버스 보호) ── -->
+    <section class="relative h-[92vh] overflow-hidden">
+        <canvas id="hero3d" class="absolute inset-0 h-full w-full"></canvas>
+        <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0d0a08]"></div>
+
+        <a href="/" class="absolute left-5 top-5 z-10 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-stone-300 backdrop-blur transition hover:bg-white/10">
+            ← zerobase
+        </a>
+
+        <div class="pointer-events-none relative z-[5] flex h-full flex-col items-center justify-center px-6 text-center">
+            <p class="text-xs font-bold uppercase tracking-[0.35em] text-amber-200/70">ATELIER OVEN · SEOUL</p>
+            <h1 class="mt-5 text-5xl font-extrabold leading-[1.1] tracking-tight sm:text-7xl">
+                오전 7시,<br><span class="gold-text">빵 굽는 냄새</span>로<br>문을 엽니다
+            </h1>
+            <p class="mt-6 max-w-md text-base leading-relaxed text-stone-400">
+                매일 24개만 굽는 시그니처 깜빠뉴.<br>지금 이 페이지의 모든 것은 실시간입니다.
+            </p>
+            <div class="mt-10 animate-bounce text-stone-500">↓</div>
+        </div>
+    </section>
+
+    <!-- ── 라이브 영역 ─────────────────────────────────── -->
+    <div dj-view="app.views.ShowcaseView" dj-root dj-poll="heartbeat" dj-poll-interval="3000">
+
+        <!-- 라이브 현황 바 -->
+        <section class="mx-auto -mt-10 max-w-3xl px-6">
+            <div class="relative z-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-5 backdrop-blur-xl">
+                <div class="flex items-center gap-2.5 text-sm">
+                    <span class="live-dot h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                    <span class="font-bold text-emerald-300">{{ viewers }}명</span>
+                    <span class="text-stone-400">지금 함께 보는 중</span>
+                </div>
+                <div class="hidden h-5 w-px bg-white/10 sm:block"></div>
+                <div class="flex items-center gap-2.5 text-sm">
+                    <span class="text-lg">🥖</span>
+                    <span class="font-bold text-amber-300">{{ stock.remaining }}개</span>
+                    <span class="text-stone-400">오늘의 깜빠뉴 남음</span>
+                </div>
+                {% if reserved %}
+                <span class="rounded-full bg-emerald-500/15 px-4 py-1.5 text-xs font-bold text-emerald-300">✓ 예약 완료 — 픽업 때 봬요!</span>
+                {% elif stock.remaining > 0 %}
+                <button dj-click="reserve"
+                        class="rounded-full bg-amber-400 px-5 py-2 text-xs font-extrabold text-stone-900 transition hover:bg-amber-300 hover:shadow-[0_0_24px_rgba(251,191,36,.35)]">
+                    한 개 예약하기
+                </button>
+                {% else %}
+                <span class="rounded-full bg-white/5 px-4 py-1.5 text-xs font-bold text-stone-500">오늘 분량 마감 — 내일 오전 7시</span>
+                {% endif %}
+            </div>
+            <p class="mt-3 text-center text-[11px] text-stone-600">
+                * 실제로 눌러보세요 — 다른 탭/기기에서 열어보면 숫자가 함께 움직입니다
+            </p>
+        </section>
+
+        <!-- 시그니처 메뉴 -->
+        <section class="reveal mx-auto max-w-4xl px-6 py-24">
+            <p class="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/60">Signature</p>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight">시그니처 셋</h2>
+            <div class="mt-8 grid gap-5 sm:grid-cols-3">
+                <div class="group rounded-3xl border border-white/8 bg-gradient-to-b from-white/[0.06] to-transparent p-7 transition hover:border-amber-200/25">
+                    <span class="text-4xl transition group-hover:scale-110 inline-block">🥖</span>
+                    <h3 class="mt-4 text-lg font-bold">새벽 깜빠뉴</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-stone-400">우리밀 · 천연발효종 · 18시간 저온숙성. 하루 24개.</p>
+                    <p class="mt-4 font-bold text-amber-300">8,500원</p>
+                </div>
+                <div class="group rounded-3xl border border-white/8 bg-gradient-to-b from-white/[0.06] to-transparent p-7 transition hover:border-amber-200/25">
+                    <span class="text-4xl transition group-hover:scale-110 inline-block">🧈</span>
+                    <h3 class="mt-4 text-lg font-bold">발효버터 크루아상</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-stone-400">이즈니 버터 27겹. 굽는 시간에 맞춰 오세요.</p>
+                    <p class="mt-4 font-bold text-amber-300">4,800원</p>
+                </div>
+                <div class="group rounded-3xl border border-white/8 bg-gradient-to-b from-white/[0.06] to-transparent p-7 transition hover:border-amber-200/25">
+                    <span class="text-4xl transition group-hover:scale-110 inline-block">☕️</span>
+                    <h3 class="mt-4 text-lg font-bold">오븐 블렌드</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-stone-400">빵에 맞춘 로스팅. 깜빠뉴와 페어링 추천.</p>
+                    <p class="mt-4 font-bold text-amber-300">5,000원</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 라이브 투표 -->
+        <section class="reveal border-y border-white/5 bg-white/[0.02] py-24">
+            <div class="mx-auto max-w-2xl px-6">
+                <p class="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/60">Live Poll</p>
+                <h2 class="mt-3 text-3xl font-extrabold tracking-tight">다음 달 신메뉴, 함께 정해요</h2>
+                <p class="mt-2 text-sm text-stone-400">지금까지 <span class="font-bold text-stone-200">{{ total_votes }}표</span> — 결과가 모두에게 실시간으로 반영됩니다</p>
+                <div class="mt-8 space-y-4">
+                    {% for o in options %}
+                    <div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="font-semibold">{{ o.emoji }} {{ o.name }}</span>
+                            <span class="text-stone-400">{{ o.votes }}표 · {{ o.percent }}%</span>
+                        </div>
+                        <div class="mt-2 flex items-center gap-3">
+                            <div class="h-3 flex-1 overflow-hidden rounded-full bg-white/8">
+                                <div class="bar-fill h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300"
+                                     style="width: {{ o.percent }}%"></div>
+                            </div>
+                            {% if not voted %}
+                            <button dj-click="vote" data-option-id="{{ o.id }}"
+                                    class="shrink-0 rounded-full border border-amber-300/30 px-4 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-400 hover:text-stone-900">
+                                투표
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if voted %}
+                <p class="mt-5 text-sm font-medium text-emerald-300">✓ 소중한 한 표 감사합니다 — 다른 사람들의 표가 실시간으로 올라오는 걸 지켜보세요</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- 라이브 방명록 -->
+        <section class="reveal mx-auto max-w-2xl px-6 py-24">
+            <p class="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/60">Guest Book</p>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight">오븐 앞 방명록</h2>
+            <p class="mt-2 text-sm text-stone-400">남기는 순간, 보고 있는 모두의 화면에 나타납니다</p>
+
+            <form dj-submit="add_note" class="mt-7 flex flex-col gap-3 sm:flex-row">
+                <input name="name" maxlength="30" required placeholder="이름" aria-label="이름"
+                       class="w-full rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-3 text-sm outline-none transition placeholder:text-stone-600 focus:border-amber-300/40 sm:w-36">
+                <input name="message" maxlength="120" required placeholder="따끈한 한마디" aria-label="한마디"
+                       class="flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-3 text-sm outline-none transition placeholder:text-stone-600 focus:border-amber-300/40">
+                <button type="submit"
+                        class="rounded-2xl bg-amber-400 px-6 py-3 text-sm font-extrabold text-stone-900 transition hover:bg-amber-300">
+                    남기기
+                </button>
+            </form>
+
+            <ul class="mt-8 space-y-3">
+                {% for n in notes %}
+                <li class="flex items-baseline gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-3.5">
+                    <span class="shrink-0 text-sm font-bold text-amber-200">{{ n.name }}</span>
+                    <span class="text-sm leading-relaxed text-stone-300">{{ n.message }}</span>
+                    <span class="ml-auto shrink-0 text-[10px] text-stone-600">{{ n.created_at|date:"H:i" }}</span>
+                </li>
+                {% empty %}
+                <li class="rounded-2xl border border-dashed border-white/10 px-5 py-8 text-center text-sm text-stone-600">
+                    첫 방명록의 주인공이 되어주세요 🥐
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+    </div><!-- /dj-root -->
+
+    <!-- ── CTA (정적) ──────────────────────────────────── -->
+    <section class="border-t border-white/5 bg-gradient-to-b from-transparent to-indigo-950/40 py-24 text-center">
+        <div class="mx-auto max-w-xl px-6">
+            <p class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-300/70">Made with zerobase</p>
+            <h2 class="mt-4 text-3xl font-extrabold leading-snug tracking-tight">
+                이 페이지의 실시간 기능 전부,<br>코드 한 줄 없이 당신의 것이 됩니다
+            </h2>
+            <p class="mt-4 text-sm leading-relaxed text-stone-400">
+                관람자 수 · 실시간 재고 · 라이브 투표 · 방명록 — <br>zerobase 블록이 되어 당신의 월드에 들어갈 기능들입니다.
+            </p>
+            <a href="/signup/" class="btn-gradient mt-8 inline-block rounded-full px-8 py-4 text-base font-extrabold text-white">
+                무료로 내 월드 만들기
+            </a>
+        </div>
+    </section>
+
+    <footer class="py-10 text-center text-xs text-stone-600">
+        ATELIER OVEN 은 zerobase 의 가능성을 보여주기 위한 가상의 브랜드입니다
+    </footer>
+</main>
+
+<!-- ── Three.js 히어로: 황금 밀가루 입자 필드 ─────────── -->
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+const canvas = document.getElementById("hero3d");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0d0a08, 0.055);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+camera.position.z = 10;
+
+// 밀가루 입자 — 황금빛 점 2000개
+const N = 2000;
+const pos = new Float32Array(N * 3);
+const sizes = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 30;
+    pos[i * 3 + 1] = (Math.random() - 0.5) * 18;
+    pos[i * 3 + 2] = (Math.random() - 0.5) * 22;
+    sizes[i] = Math.random();
+}
+const geo = new THREE.BufferGeometry();
+geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+const mat = new THREE.PointsMaterial({
+    color: 0xf5c96b, size: 0.055, transparent: true, opacity: 0.85,
+    depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const points = new THREE.Points(geo, mat);
+scene.add(points);
+
+// 은은한 빛 덩어리 (오븐 불빛)
+const glowGeo = new THREE.SphereGeometry(2.6, 32, 32);
+const glowMat = new THREE.MeshBasicMaterial({ color: 0xd97706, transparent: true, opacity: 0.10 });
+const glow = new THREE.Mesh(glowGeo, glowMat);
+glow.position.set(3.5, -1.5, -4);
+scene.add(glow);
+const glow2 = glow.clone();
+glow2.position.set(-4.5, 2, -6);
+glow2.material = new THREE.MeshBasicMaterial({ color: 0x92400e, transparent: true, opacity: 0.08 });
+scene.add(glow2);
+
+let mx = 0, my = 0;
+addEventListener("pointermove", (e) => {
+    mx = (e.clientX / innerWidth - 0.5) * 2;
+    my = (e.clientY / innerHeight - 0.5) * 2;
+}, { passive: true });
+
+function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+resize();
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+    const t = clock.getElapsedTime();
+    points.rotation.y = t * 0.02;
+    points.position.y = Math.sin(t * 0.28) * 0.35;
+    camera.position.x += (mx * 1.4 - camera.position.x) * 0.03;
+    camera.position.y += (-my * 0.9 - camera.position.y) * 0.03;
+    camera.lookAt(scene.position);
+    glow.position.y = -1.5 + Math.sin(t * 0.5) * 0.4;
+    renderer.render(scene, camera);
+});
+
+// 스크롤 리빌
+const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => e.isIntersecting && e.target.classList.add("in"));
+}, { threshold: 0.12 });
+document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

@@ -63,3 +63,44 @@ class Inquiry(models.Model):
 
     def __str__(self):
         return f"[{self.world.slug}] {self.name}: {self.message[:30]}"
+
+
+# ─────────────────────────────────────────────────────────────
+# 쇼케이스 (/showcase/) — 플랫폼의 가능성을 보여주는 플래그십 데모
+# ─────────────────────────────────────────────────────────────
+
+
+class DemoPollOption(models.Model):
+    """쇼케이스 라이브 투표 선택지."""
+
+    name = models.CharField(max_length=60)
+    emoji = models.CharField(max_length=8, default="🍞")
+    votes = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+
+class DemoGuestNote(models.Model):
+    """쇼케이스 라이브 방명록."""
+
+    name = models.CharField(max_length=30)
+    message = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class DemoPresence(models.Model):
+    """쇼케이스 실시간 관람자 (WS 연결별 heartbeat)."""
+
+    client_key = models.CharField(max_length=40, unique=True)
+    last_seen = models.DateTimeField(auto_now=True)
+
+
+class DemoStock(models.Model):
+    """오늘의 빵 남은 수량 — 모든 방문자가 같은 숫자를 실시간으로 본다."""
+
+    remaining = models.PositiveIntegerField(default=24)

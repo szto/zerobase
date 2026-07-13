@@ -33,6 +33,8 @@ class LandingView(ZDebugViewMixin, LiveView):
 
 def world_page(request, slug):
     """방문자에게 보이는 월드 페이지 (서버 렌더, WS 없음)."""
+    if slug == "demo":  # 데모는 플래그십 쇼케이스로
+        return redirect("/showcase/")
     world = get_object_or_404(World, slug=slug)
     blocks = [{"type": b.type, "cfg": render_context(b)} for b in world.blocks.all()]
     return render(
@@ -198,3 +200,98 @@ class WorldEditView(ZDebugViewMixin, LiveView):
             if b.position != pos:
                 b.position = pos
                 b.save(update_fields=["position"])
+
+
+# ─────────────────────────────────────────────────────────────
+# 쇼케이스 (/showcase/) — djust 로 만들 수 있는 것의 플래그십 데모
+# 가상의 프리미엄 베이커리: 방문자들이 서로를 실시간으로 느끼는 사이트
+# ─────────────────────────────────────────────────────────────
+
+import uuid
+
+from django.db.models import F
+from django.utils import timezone
+from datetime import timedelta
+
+from .models import DemoGuestNote, DemoPollOption, DemoPresence, DemoStock
+
+SHOWCASE_POLL_SEED = [
+    ("쑥 크림 도넛", "🍩"),
+    ("무화과 캄파뉴", "🥖"),
+    ("옥수수 치즈 스콘", "🌽"),
+]
+
+
+class ShowcaseView(ZDebugViewMixin, LiveView):
+    """아뜰리에 오븐 — 실시간(관람자/재고/투표/방명록) + 3D 히어로 쇼케이스."""
+
+    template_name = "app/showcase.html"
+    login_required = False
+
+    def mount(self, request, **kwargs):
+        self._client_key = uuid.uuid4().hex
+        self._voted = False
+        self._reserved = False
+        self.note_name = ""
+        self.note_message = ""
+        # 시드 (최초 1회)
+        if not DemoPollOption.objects.exists():
+            for i, (name, emoji) in enumerate(SHOWCASE_POLL_SEED):
+                DemoPollOption.objects.create(name=name, emoji=emoji, order=i)
+        if not DemoStock.objects.exists():
+            DemoStock.objects.create(remaining=24)
+
+    def get_context_data(self, **kwargs):
+        cutoff = timezone.now() - timedelta(seconds=30)
+        options = list(DemoPollOption.objects.all())
+        total = sum(o.votes for o in options) or 1
+        return {
+            "viewers": DemoPresence.objects.filter(last_seen__gte=cutoff).count(),
+            "stock": DemoStock.objects.first(),
+            "options": [
+                {"id": o.id, "name": o.name, "emoji": o.emoji, "votes": o.votes,
+                 "percent": round(o.votes * 100 / total)}
+                for o in options
+            ],
+            "total_votes": sum(o.votes for o in options),
+            "notes": DemoGuestNote.objects.all()[:10],
+            "voted": self._voted,
+            "reserved": self._reserved,
+            "note_name": self.note_name,
+            "note_message": self.note_message,
+        }
+
+    @event_handler()
+    def heartbeat(self, **kwargs):
+        """dj-poll(3초)로 호출 — 내 존재를 알리고 화면을 최신 상태로."""
+        DemoPresence.objects.update_or_create(client_key=self._client_key)
+        # 오래된 관람자 정리 (지연 삭제)
+        DemoPresence.objects.filter(
+            last_seen__lt=timezone.now() - timedelta(minutes=2)
+        ).delete()
+
+    @event_handler()
+    def vote(self, option_id: int = 0, **kwargs):
+        if self._voted:
+            return
+        updated = DemoPollOption.objects.filter(id=option_id).update(votes=F("votes") + 1)
+        if updated:
+            self._voted = True
+
+    @event_handler()
+    def reserve(self, **kwargs):
+        if self._reserved:
+            return
+        updated = DemoStock.objects.filter(remaining__gt=0).update(remaining=F("remaining") - 1)
+        if updated:
+            self._reserved = True
+
+    @event_handler()
+    def add_note(self, name: str = "", message: str = "", **kwargs):
+        name, message = name.strip()[:30], message.strip()[:120]
+        if name and message:
+            DemoGuestNote.objects.create(name=name, message=message)
+            # 최근 60개만 유지
+            old = DemoGuestNote.objects.all()[60:]
+            if old:
+                DemoGuestNote.objects.filter(id__in=[n.id for n in old]).delete()

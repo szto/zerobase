@@ -87,3 +87,49 @@ class ZDebugTests(TestCase):
     def test_panel_absent_without_zdebug(self):
         html = self.client.get("/").content.decode()
         self.assertNotIn("debug-panel.js", html)
+
+
+class ShowcaseTests(TestCase):
+    """쇼케이스 라이브 기능 (투표/재고/방명록)."""
+
+    def test_showcase_page_renders(self):
+        html = self.client.get("/showcase/").content.decode()
+        self.assertIn("아뜰리에 오븐", html) if "아뜰리에 오븐" in html else self.assertIn("ATELIER OVEN", html)
+        self.assertIn("hero3d", html)
+
+    def test_demo_world_redirects_to_showcase(self):
+        res = self.client.get("/w/demo/")
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, "/showcase/")
+
+    def test_vote_once_per_connection(self):
+        from app.models import DemoPollOption
+        from app.views import ShowcaseView
+
+        client = LiveViewTestClient(ShowcaseView)
+        client.mount()
+        opt = DemoPollOption.objects.first()
+        client.send_event("vote", option_id=opt.id)
+        client.send_event("vote", option_id=opt.id)  # 두 번째는 무시
+        opt.refresh_from_db()
+        self.assertEqual(opt.votes, 1)
+
+    def test_reserve_decrements_shared_stock(self):
+        from app.models import DemoStock
+        from app.views import ShowcaseView
+
+        client = LiveViewTestClient(ShowcaseView)
+        client.mount()
+        before = DemoStock.objects.first().remaining
+        client.send_event("reserve")
+        client.send_event("reserve")  # 연결당 1회
+        self.assertEqual(DemoStock.objects.first().remaining, before - 1)
+
+    def test_guest_note(self):
+        from app.models import DemoGuestNote
+        from app.views import ShowcaseView
+
+        client = LiveViewTestClient(ShowcaseView)
+        client.mount()
+        client.send_event("add_note", name="지나가던 빵순이", message="깜빠뉴 최고!")
+        self.assertEqual(DemoGuestNote.objects.count(), 1)
