@@ -21,7 +21,8 @@
     </div>
 </header>
 
-{% spaceless %}<main dj-view="app.views.UnmannedShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
+{# 루트는 반드시 div 태그 — djust 추출 정규식이 div 만 인식 (showcase_erp.html 주석 참고) #}
+{% spaceless %}<div role="main" dj-view="app.views.UnmannedShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
       class="mx-auto grid min-h-0 w-full max-w-5xl flex-1 gap-5 px-5 py-5 lg:grid-cols-2">
 
     <section class="flex min-h-0 flex-col items-center">
@@ -97,7 +98,7 @@
         </div>
         <p class="mt-2 shrink-0 text-[11px] text-gray-500">* 왼쪽 앱에서 문 열고 → 담고 → 결제. 입장/결제/재고 알림이 실시간 도착합니다 (실서비스는 카카오 비즈메시지 API).</p>
     </section>
-</main>{% endspaceless %}
+</div>{% endspaceless %}
 <footer class="shrink-0 border-t border-white/8 px-5 py-3">
     <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-sm">
         <span class="font-bold">무인매장 운영의 눈과 귀를 <span class="text-yellow-300">zerobase 블록</span>으로</span>

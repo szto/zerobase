@@ -186,3 +186,56 @@ class VerticalShowcaseTests(TestCase):
         kinds = set(UmEvent.objects.values_list("kind", flat=True))
         self.assertIn("entry", kinds)
         self.assertIn("pay", kinds)
+
+
+class DjRootTemplateContractTests(TestCase):
+    """djust 1.0.8 계약: dj-root 는 반드시 <div> 태그.
+
+    djust 의 루트 추출 정규식(_extract_liveview_content 등)은 div 만 인식한다.
+    다른 태그(main 등)를 쓰면 추출이 실패해 mount 시 문서 전체가 클라이언트로
+    전송되고, morph 가 루트를 자기 자신 안에 중첩시켜 레이아웃이 무너진다
+    (ERP 보드 컬럼이 데스크톱에서 절반 폭으로 쪼그라들던 버그의 근본 원인).
+    주석 속 태그 리터럴("<div dj-root>")도 원본 소스 스캔에 오매칭하므로 금지.
+    """
+
+    def _template_sources(self):
+        import pathlib
+
+        root = pathlib.Path(__file__).parent / "templates"
+        for path in sorted(root.rglob("*.html")):
+            source = path.read_text()
+            if "dj-root" in source:
+                yield path.name, source
+
+    def test_dj_root_element_is_div(self):
+        import re
+
+        found = 0
+        for name, source in self._template_sources():
+            for m in re.finditer(r"<([a-zA-Z0-9-]+)\b[^>]*\bdj-root(?=[\s=>/])", source):
+                found += 1
+                self.assertEqual(
+                    m.group(1), "div",
+                    f"{name}: dj-root 는 <div> 여야 한다 (djust 추출 정규식이 div 만 인식) — <{m.group(1)}> 발견",
+                )
+        self.assertGreater(found, 0, "dj-root 템플릿을 하나도 찾지 못했다 — 테스트 경로 확인")
+
+    def test_djust_can_extract_root_from_every_template(self):
+        """주석 리터럴 오매칭 등으로 추출이 통째로 실패하는 회귀를 잡는다."""
+        from djust.mixins.template import TemplateMixin
+
+        class _T(TemplateMixin):
+            template = None
+            template_name = None
+
+        t = _T()
+        for name, source in self._template_sources():
+            extracted = t._extract_liveview_root_with_wrapper(source)
+            self.assertNotEqual(
+                extracted, source,
+                f"{name}: djust 가 dj-root 를 추출하지 못했다 — 태그/주석 리터럴 확인",
+            )
+            self.assertTrue(
+                extracted.lstrip().startswith("<div"),
+                f"{name}: 추출 결과가 div 로 시작하지 않는다: {extracted[:80]!r}",
+            )

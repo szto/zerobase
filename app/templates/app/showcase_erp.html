@@ -21,7 +21,11 @@
     </div>
 </header>
 
-{% spaceless %}<main dj-view="app.views.ErpShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
+{# 루트는 반드시 div 태그 — djust 1.0.8 추출 정규식이 div 만 인식, main 등 다른 태그면
+   mount 시 문서 전체가 클라이언트로 흘러 루트가 자기 자신 안에 중첩된다.
+   주의: 이 주석에도 "div dj-root" 를 태그 형태로 쓰면 안 된다 — djust 는 주석 제거 전
+   원본 소스를 정규식으로 스캔하므로 주석 속 태그 리터럴에 오매칭한다 #}
+{% spaceless %}<div role="main" dj-view="app.views.ErpShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
       class="mx-auto grid min-h-0 w-full max-w-6xl flex-1 gap-6 px-5 py-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]">
 
     <section class="flex min-h-0 min-w-0 flex-col">
@@ -87,7 +91,7 @@
             <button type="submit" class="shrink-0 whitespace-nowrap rounded-xl bg-violet-500 px-5 py-2.5 text-xs font-extrabold text-white transition hover:bg-violet-400">전송</button>
         </form>
     </section>
-</main>{% endspaceless %}
+</div>{% endspaceless %}
 
 <footer class="shrink-0 border-t border-white/8 bg-[#1a1226] px-5 py-3">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-sm">

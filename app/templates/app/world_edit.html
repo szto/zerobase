@@ -3,7 +3,8 @@
 {% block title %}{{ world.name }} 편집 — zerobase{% endblock %}
 
 {% block body %}
-{% spaceless %}<main dj-view="app.views.WorldEditView" dj-root class="mx-auto max-w-7xl px-4 py-6 lg:px-8">
+{# 루트는 반드시 div 태그 — djust 추출 정규식이 div 만 인식 (showcase_erp.html 주석 참고) #}
+{% spaceless %}<div role="main" dj-view="app.views.WorldEditView" dj-root class="mx-auto max-w-7xl px-4 py-6 lg:px-8">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <a href="/studio/" class="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-50">←</a>
@@ -122,5 +123,5 @@
             </div>
         </div>
     </div>
-</main>{% endspaceless %}
+</div>{% endspaceless %}
 {% endblock %}

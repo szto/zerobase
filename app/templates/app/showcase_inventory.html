@@ -22,7 +22,8 @@
     </div>
 </header>
 
-{% spaceless %}<main dj-view="app.views.InventoryShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
+{# 루트는 반드시 div 태그 — djust 추출 정규식이 div 만 인식 (showcase_erp.html 주석 참고) #}
+{% spaceless %}<div role="main" dj-view="app.views.InventoryShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
       class="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-5 py-6">
 
     <div class="grid shrink-0 gap-3 sm:grid-cols-3">
@@ -101,6 +102,6 @@
         <span class="font-bold">POS·창고·온라인몰이 하나의 재고를 — <span class="text-cyan-300">zerobase 블록</span>으로</span>
         <a href="/signup/" class="btn-gradient rounded-full px-5 py-2 text-xs font-bold text-white">무료로 시작하기</a>
     </footer>
-</main>{% endspaceless %}
+</div>{% endspaceless %}
 </body>
 </html>

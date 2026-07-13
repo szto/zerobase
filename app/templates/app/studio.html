@@ -3,7 +3,8 @@
 {% block title %}스튜디오 — zerobase{% endblock %}
 
 {% block body %}
-{% spaceless %}<main dj-view="app.views.StudioView" dj-root class="mx-auto max-w-4xl px-6 py-12">
+{# 루트는 반드시 div 태그 — djust 추출 정규식이 div 만 인식 (showcase_erp.html 주석 참고) #}
+{% spaceless %}<div role="main" dj-view="app.views.StudioView" dj-root class="mx-auto max-w-4xl px-6 py-12">
     <div class="flex items-end justify-between">
         <div>
             <h1 class="text-3xl font-extrabold tracking-tight">내 월드</h1>
@@ -59,5 +60,5 @@
         </li>
         {% endfor %}
     </ul>
-</main>{% endspaceless %}
+</div>{% endspaceless %}
 {% endblock %}
