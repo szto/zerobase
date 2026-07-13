@@ -9,6 +9,15 @@ from djust.decorators import event_handler
 
 from config.zdebug import ZDebugViewMixin
 
+
+class DbRenderMixin:
+    """djust 1.1 은 뷰 상태(self.*)가 변해야 재렌더한다 — DB 만 바꾸는
+    핸들러는 noop 처리되어 화면이 멈춘다. 핸들러 끝에서 touch() 를 호출해
+    리비전을 올리면 재렌더가 강제되고 get_context_data 가 새로 실행된다."""
+
+    def touch(self):
+        self.rev = getattr(self, "rev", 0) + 1
+
 from .blocks import BLOCK_TYPES, default_config, render_context
 from .models import RESERVED_SLUGS, Block, Inquiry, World
 
@@ -18,7 +27,7 @@ from .models import RESERVED_SLUGS, Block, Inquiry, World
 # ─────────────────────────────────────────────────────────────
 
 
-class LandingView(ZDebugViewMixin, LiveView):
+class LandingView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """zerobase 홈 — 서비스 소개 + 시작 버튼."""
 
     template_name = "app/landing.html"
@@ -83,7 +92,7 @@ def _unique_slug(name: str) -> str:
     return slug
 
 
-class StudioView(ZDebugViewMixin, LiveView):
+class StudioView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """내 월드 목록 + 새 월드 생성."""
 
     template_name = "app/studio.html"
@@ -101,11 +110,13 @@ class StudioView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def set_name(self, value: str = "", **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         self.new_name = value[:60]
         self.error = ""
 
     @event_handler()
     def create_world(self, **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         name = self.new_name.strip()
         if len(name) < 2:
             self.error = "이름을 2자 이상 입력해주세요."
@@ -119,7 +130,7 @@ class StudioView(ZDebugViewMixin, LiveView):
         self.new_name = ""
 
 
-class WorldEditView(ZDebugViewMixin, LiveView):
+class WorldEditView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """월드 에디터 — 왼쪽 편집 폼, 오른쪽 실시간 미리보기.
 
     모든 변경은 즉시 DB 에 저장된다 (별도 저장 버튼 없음).
@@ -158,6 +169,7 @@ class WorldEditView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def update_world(self, value: str = "", field: str = "", **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         world = self._world()
         if field in ("name", "tagline", "theme_color"):
             setattr(world, field, value[:120])
@@ -165,6 +177,7 @@ class WorldEditView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def update_block(self, value: str = "", block_id: int = 0, field: str = "", **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         block = get_object_or_404(Block, id=block_id, world__owner=self.request.user)
         allowed = {f["key"] for f in BLOCK_TYPES[block.type]["fields"]}
         if field in allowed:
@@ -173,6 +186,7 @@ class WorldEditView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def add_block(self, block_type: str = "", **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         if block_type not in BLOCK_TYPES:
             return
         world = self._world()
@@ -183,10 +197,12 @@ class WorldEditView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def remove_block(self, block_id: int = 0, **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         Block.objects.filter(id=block_id, world__owner=self.request.user).delete()
 
     @event_handler()
     def move_block(self, block_id: int = 0, direction: str = "up", **kwargs):  # noqa: S009 — 뷰 레벨 인증 + owner 필터
+        self.touch()
         world = self._world()
         blocks = list(world.blocks.all())
         idx = next((i for i, b in enumerate(blocks) if b.id == block_id), None)
@@ -222,7 +238,7 @@ SHOWCASE_POLL_SEED = [
 ]
 
 
-class ShowcaseView(ZDebugViewMixin, LiveView):
+class ShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """아뜰리에 오븐 — 실시간(관람자/재고/투표/방명록) + 3D 히어로 쇼케이스."""
 
     template_name = "app/showcase.html"
@@ -263,6 +279,7 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def heartbeat(self, **kwargs):
+        self.touch()
         """dj-poll(3초)로 호출 — 내 존재를 알리고 화면을 최신 상태로."""
         DemoPresence.objects.update_or_create(client_key=self.client_key)
         # 오래된 관람자 정리 (지연 삭제)
@@ -272,6 +289,7 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def vote(self, option_id: int = 0, **kwargs):
+        self.touch()
         if self.voted:
             return
         updated = DemoPollOption.objects.filter(id=option_id).update(votes=F("votes") + 1)
@@ -280,6 +298,7 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def reserve(self, **kwargs):
+        self.touch()
         if self.reserved:
             return
         updated = DemoStock.objects.filter(remaining__gt=0).update(remaining=F("remaining") - 1)
@@ -288,6 +307,7 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def add_note(self, name: str = "", message: str = "", **kwargs):
+        self.touch()
         name, message = name.strip()[:30], message.strip()[:120]
         if name and message:
             DemoGuestNote.objects.create(name=name, message=message)
@@ -310,7 +330,7 @@ def showcase_hub(request):
     return render(request, "app/showcase_hub.html")
 
 
-class ErpShowcaseView(ZDebugViewMixin, LiveView):
+class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """Slack 스타일 영업/고객/협업 허브 데모."""
 
     template_name = "app/showcase_erp.html"
@@ -358,10 +378,12 @@ class ErpShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def refresh(self, **kwargs):
+        self.touch()
         pass  # dj-poll — 재렌더만으로 전 방문자 동기화
 
     @event_handler()
     def advance_deal(self, deal_id: int = 0, **kwargs):
+        self.touch()
         deal = ErpDeal.objects.filter(id=deal_id).first()
         if deal and deal.stage < len(ErpDeal.STAGES) - 1:
             deal.stage += 1
@@ -374,6 +396,7 @@ class ErpShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def post_message(self, author: str = "", text: str = "", **kwargs):
+        self.touch()
         author, text = author.strip()[:30] or "익명", text.strip()[:200]
         if text:
             ErpMessage.objects.create(author=author, text=text)
@@ -382,7 +405,7 @@ class ErpShowcaseView(ZDebugViewMixin, LiveView):
                 ErpMessage.objects.filter(id__in=[m.id for m in old]).delete()
 
 
-class InventoryShowcaseView(ZDebugViewMixin, LiveView):
+class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """도소매 실시간 재고 현황 데모."""
 
     template_name = "app/showcase_inventory.html"
@@ -418,10 +441,12 @@ class InventoryShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def refresh(self, **kwargs):
+        self.touch()
         pass
 
     @event_handler()
     def receive(self, item_id: int = 0, **kwargs):
+        self.touch()
         item = InvItem.objects.filter(id=item_id).first()
         if item:
             item.stock = F("stock") + 10
@@ -430,13 +455,14 @@ class InventoryShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def ship(self, item_id: int = 0, **kwargs):
+        self.touch()
         updated = InvItem.objects.filter(id=item_id, stock__gte=5).update(stock=F("stock") - 5)
         if updated:
             item = InvItem.objects.get(id=item_id)
             InvEvent.objects.create(item_name=item.name, delta=-5)
 
 
-class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
+class UnmannedShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """무인마켓 앱 + 사장님 카카오톡 알림 데모."""
 
     template_name = "app/showcase_unmanned.html"
@@ -482,22 +508,26 @@ class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def refresh(self, **kwargs):
+        self.touch()
         pass
 
     @event_handler()
     def enter_store(self, **kwargs):
+        self.touch()
         if not self.entered:
             self.entered = True
             UmEvent.objects.create(kind="entry", text="문이 열렸습니다 · 고객 1명 입장 🚪")
 
     @event_handler()
     def add_to_cart(self, product_id: int = 0, **kwargs):
+        self.touch()
         p = UmProduct.objects.filter(id=product_id, stock__gt=0).first()
         if p and self.cart.get(p.id, 0) < p.stock:
             self.cart[p.id] = self.cart.get(p.id, 0) + 1
 
     @event_handler()
     def checkout(self, **kwargs):
+        self.touch()
         if not self.cart:
             return
         total, lines = 0, []
