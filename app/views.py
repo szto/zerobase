@@ -372,7 +372,9 @@ class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     def mount(self, request, **kwargs):
         self.msg_author = ""
         self.msg_text = ""
-        if not ErpDeal.objects.exists():
+        # 데모 셀프리셋: 딜이 없거나 전부 계약 완료면 시드로 복원
+        if not ErpDeal.objects.filter(stage__lt=3).exists():
+            ErpDeal.objects.all().delete()
             for n, c, a, s in self.SEED_DEALS:
                 ErpDeal.objects.create(name=n, company=c, amount=a, stage=s)
         if not ErpMessage.objects.exists():
@@ -450,7 +452,12 @@ class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     ]
 
     def mount(self, request, **kwargs):
-        if not InvItem.objects.exists():
+        # 데모 셀프리셋: 품목이 없거나 재고가 비정상(0 또는 99 초과)이면 시드 복원
+        from django.db.models import Q
+        if (not InvItem.objects.exists()
+                or InvItem.objects.filter(Q(stock=0) | Q(stock__gt=99)).exists()):
+            InvItem.objects.all().delete()
+            InvEvent.objects.all().delete()
             for i, (n, e, s, sf) in enumerate(self.SEED_ITEMS):
                 InvItem.objects.create(name=n, emoji=e, stock=s, safety=sf, order=i)
 
