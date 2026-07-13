@@ -18,6 +18,13 @@ class DbRenderMixin:
     def touch(self):
         self.rev = getattr(self, "rev", 0) + 1
 
+    def touch_if_changed(self, fingerprint):
+        """폴링 핸들러용: 데이터 핑거프린트가 바뀐 경우에만 재렌더한다.
+        평소에는 noop 이 되어 화면이 완전히 조용해진다 (밑줄 속성 = 비직렬화)."""
+        if getattr(self, "_last_fp", None) != fingerprint:
+            self._last_fp = fingerprint
+            self.touch()
+
 
 def _hhmm(dt):
     """러스트 렌더러는 |date 필터를 지원하지 않는다 — 파이썬에서 포맷."""
@@ -255,7 +262,7 @@ SHOWCASE_POLL_SEED = [
 ]
 
 
-class ShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
+class ShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
     """아뜰리에 오븐 — 실시간(관람자/재고/투표/방명록) + 3D 히어로 쇼케이스."""
 
     template_name = "app/showcase.html"
@@ -299,13 +306,18 @@ class ShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
 
     @event_handler()
     def heartbeat(self, **kwargs):
-        self.touch()
-        """dj-poll(3초)로 호출 — 내 존재를 알리고 화면을 최신 상태로."""
+        """dj-poll(3초)로 호출 — 내 존재를 알리고, 바뀐 게 있을 때만 재렌더."""
         DemoPresence.objects.update_or_create(client_key=self.client_key)
-        # 오래된 관람자 정리 (지연 삭제)
         DemoPresence.objects.filter(
             last_seen__lt=timezone.now() - timedelta(minutes=2)
         ).delete()
+        cutoff = timezone.now() - timedelta(seconds=30)
+        self.touch_if_changed((
+            DemoPresence.objects.filter(last_seen__gte=cutoff).count(),
+            DemoStock.objects.values_list("remaining", flat=True).first(),
+            tuple(DemoPollOption.objects.values_list("id", "votes")),
+            DemoGuestNote.objects.values_list("id", flat=True).first(),
+        ))
 
     @event_handler()
     def vote(self, option_id: int = 0, **kwargs):
@@ -350,17 +362,20 @@ def showcase_hub(request):
     return render(request, "app/showcase_hub.html")
 
 
-class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
+class FullHtmlMixin:
+    """쇼케이스 데모용: 리스트 이동/삽입 diff 가 취약하므로, 재렌더가 필요한
+    순간에는 패치 대신 전체 HTML 을 전송한다 (touch 시에만 — 유휴 폴은 noop)."""
+
+    def touch(self):
+        super().touch()
+        self._force_full_html = True
+
+
+class ErpShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
     """Slack 스타일 영업/고객/협업 허브 데모."""
 
     template_name = "app/showcase_erp.html"
     login_required = False
-
-    def touch(self):
-        super().touch()
-        # 칸반처럼 요소가 컬럼 간 이동하는 구조는 djust 1.1rc 의 diff 경로가
-        # 어긋난다 (패치 실패 → 화면 훼손). 전체 HTML 전송으로 우회.
-        self._force_full_html = True
 
     SEED_DEALS = [
         ("클라우드 도입 문의", "한강물산", 1200, 0),
@@ -416,8 +431,10 @@ class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
 
     @event_handler()
     def refresh(self, **kwargs):
-        self.touch()
-        pass  # dj-poll — 재렌더만으로 전 방문자 동기화
+        self.touch_if_changed((
+            tuple(ErpDeal.objects.values_list("id", "stage").order_by("id")),
+            ErpMessage.objects.values_list("id", flat=True).first(),  # 최신 id
+        ))
 
     @event_handler()
     def advance_deal(self, deal_id: int = 0, **kwargs):
@@ -443,7 +460,7 @@ class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
                 ErpMessage.objects.filter(id__in=[m.id for m in old]).delete()
 
 
-class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
+class InventoryShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
     """도소매 실시간 재고 현황 데모."""
 
     template_name = "app/showcase_inventory.html"
@@ -488,8 +505,10 @@ class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
 
     @event_handler()
     def refresh(self, **kwargs):
-        self.touch()
-        pass
+        self.touch_if_changed((
+            tuple(InvItem.objects.values_list("id", "stock").order_by("id")),
+            InvEvent.objects.values_list("id", flat=True).first(),
+        ))
 
     @event_handler()
     def receive(self, item_id: int = 0, **kwargs):
@@ -509,7 +528,7 @@ class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
             InvEvent.objects.create(item_name=item.name, delta=-5)
 
 
-class UnmannedShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
+class UnmannedShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
     """무인마켓 앱 + 사장님 카카오톡 알림 데모."""
 
     template_name = "app/showcase_unmanned.html"
@@ -559,8 +578,10 @@ class UnmannedShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
 
     @event_handler()
     def refresh(self, **kwargs):
-        self.touch()
-        pass
+        self.touch_if_changed((
+            tuple(UmProduct.objects.values_list("id", "stock").order_by("id")),
+            UmEvent.objects.values_list("id", flat=True).first(),
+        ))
 
     @event_handler()
     def enter_store(self, **kwargs):
