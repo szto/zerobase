@@ -3,7 +3,7 @@
 {% block title %}zerobase — 0에서 시작하는 나만의 비즈니스{% endblock %}
 
 {% block body %}
-<main dj-view="app.views.LandingView" dj-root>
+<main dj-view="app.views.LandingView" dj-root>{% spaceless %}
 
     <!-- ── 히어로 ─────────────────────────────────────── -->
     <section class="relative overflow-hidden">
@@ -94,5 +94,5 @@
     <footer class="border-t border-gray-100 py-10 text-center text-xs text-gray-400">
         zero<span class="font-semibold">base</span> — 0에서 시작하는 나만의 세계
     </footer>
-</main>
+{% endspaceless %}</main>
 {% endblock %}

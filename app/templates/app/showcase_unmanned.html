@@ -22,7 +22,7 @@
 </header>
 
 <main dj-view="app.views.UnmannedShowcaseView" dj-root dj-poll="refresh" dj-poll-interval="3000"
-      class="mx-auto grid max-w-5xl gap-8 px-5 py-10 lg:grid-cols-2">
+      class="mx-auto grid max-w-5xl gap-8 px-5 py-10 lg:grid-cols-2">{% spaceless %}
 
     <section class="justify-self-center">
         <p class="mb-3 text-center text-xs font-bold uppercase tracking-[0.25em] text-gray-500">고객 화면 · 매장 키오스크 앱</p>
@@ -105,6 +105,6 @@
             <a href="/signup/" class="btn-gradient mt-3 inline-block rounded-full px-6 py-2.5 text-sm font-bold text-white">무료로 시작하기</a>
         </div>
     </section>
-</main>
+{% endspaceless %}</main>
 </body>
 </html>
