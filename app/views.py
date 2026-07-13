@@ -26,6 +26,15 @@ class DbRenderMixin:
             self.touch()
 
 
+class FullHtmlMixin:
+    """쇼케이스 데모용: 리스트 이동/삽입 diff 가 취약하므로, 재렌더가 필요한
+    순간에는 패치 대신 전체 HTML 을 전송한다 (touch 시에만 — 유휴 폴은 noop)."""
+
+    def touch(self):
+        super().touch()
+        self._force_full_html = True
+
+
 def _hhmm(dt):
     """러스트 렌더러는 |date 필터를 지원하지 않는다 — 파이썬에서 포맷."""
     from django.utils import timezone as _tz
@@ -360,15 +369,6 @@ from .models import ErpDeal, ErpMessage, InvEvent, InvItem, UmEvent, UmProduct
 def showcase_hub(request):
     """업종 선택 허브 (정적 렌더)."""
     return render(request, "app/showcase_hub.html")
-
-
-class FullHtmlMixin:
-    """쇼케이스 데모용: 리스트 이동/삽입 diff 가 취약하므로, 재렌더가 필요한
-    순간에는 패치 대신 전체 HTML 을 전송한다 (touch 시에만 — 유휴 폴은 noop)."""
-
-    def touch(self):
-        super().touch()
-        self._force_full_html = True
 
 
 class ErpShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
