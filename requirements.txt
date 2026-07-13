@@ -9,3 +9,5 @@ redis>=5.0,<6
 uvicorn[standard]>=0.30
 whitenoise>=6.7
 django-axes>=7.0
+# djust redis 상태 압축
+zstandard>=0.22

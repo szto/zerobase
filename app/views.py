@@ -129,10 +129,10 @@ class WorldEditView(ZDebugViewMixin, LiveView):
     login_required = True
 
     def mount(self, request, world_id=None, **kwargs):
-        self._world_id = int(world_id)
+        self.world_id = int(world_id)
 
     def _world(self):
-        return get_object_or_404(World, id=self._world_id, owner=self.request.user)
+        return get_object_or_404(World, id=self.world_id, owner=self.request.user)
 
     def get_context_data(self, **kwargs):
         world = self._world()
@@ -229,9 +229,9 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
     login_required = False
 
     def mount(self, request, **kwargs):
-        self._client_key = uuid.uuid4().hex
-        self._voted = False
-        self._reserved = False
+        self.client_key = uuid.uuid4().hex
+        self.voted = False
+        self.reserved = False
         self.note_name = ""
         self.note_message = ""
         # 시드 (최초 1회)
@@ -255,8 +255,8 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
             ],
             "total_votes": sum(o.votes for o in options),
             "notes": DemoGuestNote.objects.all()[:10],
-            "voted": self._voted,
-            "reserved": self._reserved,
+            "voted": self.voted,
+            "reserved": self.reserved,
             "note_name": self.note_name,
             "note_message": self.note_message,
         }
@@ -264,7 +264,7 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
     @event_handler()
     def heartbeat(self, **kwargs):
         """dj-poll(3초)로 호출 — 내 존재를 알리고 화면을 최신 상태로."""
-        DemoPresence.objects.update_or_create(client_key=self._client_key)
+        DemoPresence.objects.update_or_create(client_key=self.client_key)
         # 오래된 관람자 정리 (지연 삭제)
         DemoPresence.objects.filter(
             last_seen__lt=timezone.now() - timedelta(minutes=2)
@@ -272,19 +272,19 @@ class ShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def vote(self, option_id: int = 0, **kwargs):
-        if self._voted:
+        if self.voted:
             return
         updated = DemoPollOption.objects.filter(id=option_id).update(votes=F("votes") + 1)
         if updated:
-            self._voted = True
+            self.voted = True
 
     @event_handler()
     def reserve(self, **kwargs):
-        if self._reserved:
+        if self.reserved:
             return
         updated = DemoStock.objects.filter(remaining__gt=0).update(remaining=F("remaining") - 1)
         if updated:
-            self._reserved = True
+            self.reserved = True
 
     @event_handler()
     def add_note(self, name: str = "", message: str = "", **kwargs):
@@ -452,8 +452,8 @@ class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
     ]
 
     def mount(self, request, **kwargs):
-        self._cart = {}  # {product_id: qty} — 연결(고객)별 장바구니
-        self._entered = False
+        self.cart = {}  # {product_id: qty} — 연결(고객)별 장바구니
+        self.entered = False
         if not UmProduct.objects.exists():
             for i, (n, e, p, s) in enumerate(self.SEED_PRODUCTS):
                 UmProduct.objects.create(name=n, emoji=e, price=p, stock=s, order=i)
@@ -463,7 +463,7 @@ class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
         cart_items = []
         total = 0
         for p in products:
-            qty = self._cart.get(p.id, 0)
+            qty = self.cart.get(p.id, 0)
             if qty:
                 cart_items.append({"name": p.name, "emoji": p.emoji, "qty": qty,
                                    "sum": p.price * qty})
@@ -471,12 +471,12 @@ class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
         return {
             "products": [
                 {"id": p.id, "name": p.name, "emoji": p.emoji, "price": p.price,
-                 "stock": p.stock, "in_cart": self._cart.get(p.id, 0)}
+                 "stock": p.stock, "in_cart": self.cart.get(p.id, 0)}
                 for p in products
             ],
             "cart_items": cart_items,
             "cart_total": total,
-            "entered": self._entered,
+            "entered": self.entered,
             "events": UmEvent.objects.all()[:12],
         }
 
@@ -486,22 +486,22 @@ class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
 
     @event_handler()
     def enter_store(self, **kwargs):
-        if not self._entered:
-            self._entered = True
+        if not self.entered:
+            self.entered = True
             UmEvent.objects.create(kind="entry", text="문이 열렸습니다 · 고객 1명 입장 🚪")
 
     @event_handler()
     def add_to_cart(self, product_id: int = 0, **kwargs):
         p = UmProduct.objects.filter(id=product_id, stock__gt=0).first()
-        if p and self._cart.get(p.id, 0) < p.stock:
-            self._cart[p.id] = self._cart.get(p.id, 0) + 1
+        if p and self.cart.get(p.id, 0) < p.stock:
+            self.cart[p.id] = self.cart.get(p.id, 0) + 1
 
     @event_handler()
     def checkout(self, **kwargs):
-        if not self._cart:
+        if not self.cart:
             return
         total, lines = 0, []
-        for pid, qty in list(self._cart.items()):
+        for pid, qty in list(self.cart.items()):
             p = UmProduct.objects.filter(id=pid).first()
             if not p:
                 continue
@@ -520,7 +520,7 @@ class UnmannedShowcaseView(ZDebugViewMixin, LiveView):
             UmEvent.objects.create(
                 kind="pay", text=f"💳 결제 완료 {total:,}원 · {', '.join(lines)}"
             )
-        self._cart = {}
+        self.cart = {}
         old = UmEvent.objects.all()[40:]
         if old:
             UmEvent.objects.filter(id__in=[e.id for e in old]).delete()
