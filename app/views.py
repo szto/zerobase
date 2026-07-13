@@ -26,15 +26,6 @@ class DbRenderMixin:
             self.touch()
 
 
-class FullHtmlMixin:
-    """쇼케이스 데모용: 리스트 이동/삽입 diff 가 취약하므로, 재렌더가 필요한
-    순간에는 패치 대신 전체 HTML 을 전송한다 (touch 시에만 — 유휴 폴은 noop)."""
-
-    def touch(self):
-        super().touch()
-        self._force_full_html = True
-
-
 def _hhmm(dt):
     """러스트 렌더러는 |date 필터를 지원하지 않는다 — 파이썬에서 포맷."""
     from django.utils import timezone as _tz
@@ -271,7 +262,7 @@ SHOWCASE_POLL_SEED = [
 ]
 
 
-class ShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
+class ShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """아뜰리에 오븐 — 실시간(관람자/재고/투표/방명록) + 3D 히어로 쇼케이스."""
 
     template_name = "app/showcase.html"
@@ -371,7 +362,7 @@ def showcase_hub(request):
     return render(request, "app/showcase_hub.html")
 
 
-class ErpShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
+class ErpShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """Slack 스타일 영업/고객/협업 허브 데모."""
 
     template_name = "app/showcase_erp.html"
@@ -460,7 +451,7 @@ class ErpShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
                 ErpMessage.objects.filter(id__in=[m.id for m in old]).delete()
 
 
-class InventoryShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
+class InventoryShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """도소매 실시간 재고 현황 데모."""
 
     template_name = "app/showcase_inventory.html"
@@ -528,7 +519,7 @@ class InventoryShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveV
             InvEvent.objects.create(item_name=item.name, delta=-5)
 
 
-class UnmannedShowcaseView(FullHtmlMixin, DbRenderMixin, ZDebugViewMixin, LiveView):
+class UnmannedShowcaseView(DbRenderMixin, ZDebugViewMixin, LiveView):
     """무인마켓 앱 + 사장님 카카오톡 알림 데모."""
 
     template_name = "app/showcase_unmanned.html"
