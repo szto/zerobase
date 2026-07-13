@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
-<body class="flex h-screen flex-col overflow-hidden bg-[#1a1226] text-violet-50 antialiased">
+{# 뷰포트-피팅(스크롤 없는 대시보드)은 lg 이상에서만 — 모바일 812px 에서는 패널이 짓눌려
+   카드가 잘리므로 자연 페이지 스크롤로 푼다 #}
+<body class="flex min-h-screen flex-col bg-[#1a1226] text-violet-50 antialiased lg:h-screen lg:overflow-hidden">
 <header class="shrink-0 border-b border-white/8 px-5 py-4">
     <div class="mx-auto flex max-w-6xl items-center justify-between">
         <div class="flex items-center gap-3">

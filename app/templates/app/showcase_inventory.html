@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <style>.bar-fill { transition: width .6s cubic-bezier(.2,.8,.2,1); }</style>
 </head>
-<body class="flex h-screen flex-col overflow-hidden bg-[#081418] text-cyan-50 antialiased">
+{# 뷰포트-피팅은 lg 이상에서만 — 모바일에서는 품목 리스트가 짓눌려 겹치므로 자연 스크롤 #}
+<body class="flex min-h-screen flex-col bg-[#081418] text-cyan-50 antialiased lg:h-screen lg:overflow-hidden">
 <header class="shrink-0 border-b border-white/8 px-5 py-4">
     <div class="mx-auto flex max-w-6xl items-center justify-between">
         <div class="flex items-center gap-3">

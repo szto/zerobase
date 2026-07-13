@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
-<body class="flex h-screen flex-col overflow-hidden bg-[#101014] text-gray-100 antialiased">
+{# 뷰포트-피팅은 lg 이상에서만 — 모바일은 자연 스크롤 (아래 min-h 가 프레임 높이 보장) #}
+<body class="flex min-h-screen flex-col bg-[#101014] text-gray-100 antialiased lg:h-screen lg:overflow-hidden">
 <header class="shrink-0 border-b border-white/8 px-5 py-4">
     <div class="mx-auto flex max-w-5xl items-center justify-between">
         <div class="flex items-center gap-3">
@@ -27,7 +28,7 @@
 
     <section class="flex min-h-0 flex-col items-center">
         <p class="mb-3 text-center text-xs font-bold uppercase tracking-[0.25em] text-gray-500">고객 화면 · 매장 키오스크 앱</p>
-        <div class="flex min-h-0 w-[320px] flex-1 flex-col rounded-[2.4rem] border-[6px] border-[#26262e] bg-[#17171d] p-4 shadow-2xl shadow-black/60">
+        <div class="flex min-h-[28rem] w-[320px] flex-1 flex-col rounded-[2.4rem] border-[6px] border-[#26262e] bg-[#17171d] p-4 shadow-2xl shadow-black/60 lg:min-h-0">
             <div class="mx-auto mb-3 h-1.5 w-20 rounded-full bg-[#26262e]"></div>
 
             {% if not entered %}
@@ -73,7 +74,7 @@
 
     <section class="flex min-h-0 flex-col">
         <p class="mb-2 shrink-0 text-center text-xs font-bold uppercase tracking-[0.25em] text-gray-500 lg:text-left">사장님 화면 · 카카오톡 알림</p>
-        <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-[#89A0C2]/20 shadow-xl">
+        <div class="flex min-h-[20rem] flex-1 flex-col overflow-hidden rounded-3xl bg-[#89A0C2]/20 shadow-xl lg:min-h-0">
             <div class="flex items-center gap-2.5 bg-[#2e2e35] px-5 py-3.5">
                 <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-yellow-300 text-base">🏪</span>
                 <div>
