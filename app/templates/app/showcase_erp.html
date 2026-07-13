@@ -1,4 +1,4 @@
-{% load static live_tags %}
+{% load static live_tags humanize %}
 <!doctype html>
 <html lang="ko">
 <head>
@@ -28,21 +28,21 @@
     <section>
         <div class="mb-4 flex flex-wrap items-center gap-4">
             <h2 class="text-sm font-extrabold uppercase tracking-widest text-violet-300/70">Pipeline</h2>
-            <span class="text-xs text-violet-200/50">진행중 <b class="text-violet-100">{{ pipeline_total|floatformat:0 }}만원</b></span>
-            <span class="text-xs text-violet-200/50">이번 달 계약 <b class="text-emerald-300">{{ won_total|floatformat:0 }}만원</b></span>
+            <span class="text-xs text-violet-200/50">진행중 <b class="text-violet-100">{{ pipeline_total|intcomma }}만원</b></span>
+            <span class="text-xs text-violet-200/50">이번 달 계약 <b class="text-emerald-300">{{ won_total|intcomma }}만원</b></span>
         </div>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {% for st in stages %}
             <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                 <div class="flex items-center justify-between px-1">
                     <span class="text-xs font-extrabold {% if st.is_last %}text-emerald-300{% else %}text-violet-300{% endif %}">{{ st.label }}</span>
-                    <span class="text-[10px] text-violet-200/40">{{ st.total|floatformat:0 }}만</span>
+                    <span class="text-[10px] text-violet-200/40">{{ st.total|intcomma }}만</span>
                 </div>
                 <div class="mt-2 space-y-2">
                     {% for d in st.deals %}
                     <div class="rounded-xl border border-white/8 bg-[#241733] p-3 shadow-sm">
                         <p class="text-[13px] font-bold leading-snug">{{ d.name }}</p>
-                        <p class="mt-0.5 text-[11px] text-violet-200/50">{{ d.company }} · {{ d.amount|floatformat:0 }}만원</p>
+                        <p class="mt-0.5 text-[11px] text-violet-200/50">{{ d.company }} · <span class="whitespace-nowrap">{{ d.amount|intcomma }}만원</span></p>
                         {% if not st.is_last %}
                         <button dj-click="advance_deal" data-deal-id="{{ d.id }}"
                                 class="mt-2 w-full rounded-lg bg-violet-500/20 py-1.5 text-[11px] font-bold text-violet-200 transition hover:bg-violet-500 hover:text-white">
@@ -84,7 +84,7 @@
                    class="w-24 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-xs outline-none placeholder:text-violet-200/30 focus:border-violet-400/50">
             <input name="text" maxlength="200" required placeholder="#영업 채널에 메시지 보내기" aria-label="메시지"
                    class="flex-1 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-xs outline-none placeholder:text-violet-200/30 focus:border-violet-400/50">
-            <button type="submit" class="rounded-xl bg-violet-500 px-4 text-xs font-extrabold text-white transition hover:bg-violet-400">전송</button>
+            <button type="submit" class="shrink-0 whitespace-nowrap rounded-xl bg-violet-500 px-5 py-2.5 text-xs font-extrabold text-white transition hover:bg-violet-400">전송</button>
         </form>
     </section>
 </main>

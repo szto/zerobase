@@ -353,7 +353,7 @@ class ErpShowcaseView(ZDebugViewMixin, LiveView):
             "stages": stages,
             "pipeline_total": sum(d.amount for d in deals if d.stage < 3),
             "won_total": sum(d.amount for d in deals if d.stage == 3),
-            "messages": ErpMessage.objects.all()[:12],
+            "messages": list(ErpMessage.objects.all()[:12])[::-1],  # 오래된 것부터 (Slack 순서)
         }
 
     @event_handler()
