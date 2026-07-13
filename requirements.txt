@@ -1,6 +1,6 @@
 django>=5.1,<6.0
-# rc 버전은 pip 이 자동 선택하지 않으므로 정확히 핀 고정
-djust==1.1.0rc7
+# 1.1.0rc 는 diff 엔진 불안정(패치 경로 오류)으로 1.0.8 유지 — 정식 1.1 릴리스 후 재도전
+djust==1.0.8
 channels>=4.0
 channels-redis>=4.2
 # redis 8.x 는 channels_redis 4.3 과 비호환 (블로킹 수신이 ~6초마다
